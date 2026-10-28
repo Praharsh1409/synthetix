@@ -41,7 +41,7 @@ class ApplicationErrorTests(unittest.TestCase):
         function=ast.unparse(next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='render_saved_result'))
         with tempfile.TemporaryDirectory() as temp:
             artifacts=Path(temp);folder=artifacts/'synthetix_fixture';folder.mkdir()
-            source=folder/'version_0.html';source.write_text('<html>Original</html>')
+            source=folder/'..'/folder.name/'version_0.html';source.write_text('<html>Original</html>')
             (folder/'summary.json').write_text(json.dumps({'status':'diagnosis_only'}))
             script='''
 import streamlit as st
@@ -53,11 +53,16 @@ def preview_document(*args):pass
 pages={}
 st.session_state['run_folder']='''+repr(str(folder))+"\n"+function+'\nrender_saved_result()\n'
             original_read=Path.read_bytes
+            attempted=[]
+            canonical_source=source.resolve()
             def guarded(path):
-                if path==source:raise PermissionError('audit export read failure')
+                if path.resolve()==canonical_source:
+                    attempted.append(path)
+                    raise PermissionError('audit export read failure')
                 return original_read(path)
             with patch.object(project_store,'ARTIFACTS',artifacts),patch.object(Path,'read_bytes',guarded):
                 app=AppTest.from_string(script).run()
+            self.assertTrue(attempted,'The simulated failure must target the resolved export path')
             self.assertFalse(app.exception)
             self.assertTrue(any('audit export read failure' in error.value for error in app.error))
             self.assertEqual(len(app.success),0)
