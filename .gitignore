@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+artifacts/
+backups/
+.taste-skill/
+.vscode/
+.playwright/
+.playwright-cli/
+*.log
+synthetix_backup.py
+synthetix.before-*.py

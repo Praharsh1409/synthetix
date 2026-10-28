@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="Synthetix plans websites with you, generates HTML/CSS/JavaScript, and tests and repairs it in a real browser. NVIDIA Nemotron on Nebius Token Factory.">
+ <meta name="theme-color" content="#0b0d14">
+ <title>Synthetix — Plan, build, test, repair</title>
+ <link rel="stylesheet" href="styles.css">
+ <script src="site.js" defer></script>
+</head>
+<body>
+ <a class="skip" href="#main">Skip to content</a>
+ <header class="masthead"><a class="wordmark" href="#main" aria-label="Synthetix home"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M25 8H12a6 6 0 0 0 0 12h8a4 4 0 0 1 0 8H7M7 24h13a6 6 0 0 0 0-12h-8a4 4 0 0 1 0-8h13"/></svg>Synthetix</a><nav aria-label="Main"><a href="#how">How it works</a><a href="#start">Run locally</a><a href="https://github.com/Praharsh1409/synthetix">GitHub ↗</a></nav></header>
+ <main id="main" tabindex="-1">
+  <section class="hero" aria-labelledby="title">
+   <h1 id="title">A website, with<br>evidence it works.</h1>
+   <p class="lead">Plan it with an AI design partner. Build it with Nemotron. Run it in a real browser, inspect the failures, and review the repair.</p>
+   <div class="actions"><a class="button" href="#start">Get started locally</a><a class="text-link" href="#example">Try the small example ↓</a></div>
+   <p class="caption technology">NVIDIA Nemotron on Nebius Token Factory.<br>Python, Streamlit and Playwright Chromium.</p>
+  </section>
+  <section id="example" aria-labelledby="example-title" class="reveal">
+   <h2 id="example-title">A page can render.<br>And still be wrong.</h2>
+   <p>This counter has a deliberate logic bug: one click adds two. A browser console can be perfectly quiet while the behaviour fails.</p>
+   <div class="instrument" data-ui>
+    <div class="instrument-top"><strong>Counter behaviour</strong><span id="mode">Seeded +2 bug</span></div>
+    <div class="code" aria-label="Illustrative JavaScript"><code>count += <b id="step">2</b>;</code><span>Expected increment: 1</span></div>
+    <div class="counter"><output id="count" aria-live="polite" aria-atomic="true" aria-label="Current counter value">0</output><div class="controls"><button id="increase" type="button">Increase</button><button id="reset" type="button">Reset</button><button id="test" type="button">Run check</button></div></div>
+    <p id="verdict" role="status" aria-live="polite">Run the check to compare one click with the expected result.</p>
+    <button id="correct" type="button">Load corrected example</button>
+   </div>
+   <p class="caption">Scripted illustration, not a live AI repair. No API calls or credits. In the full app, Chromium runs your approved checks and Nemotron attempts the correction.</p>
+   <noscript><p>The interactive illustration requires JavaScript. The seeded counter adds two; the assertion expects one, so it fails. The corrected version adds one.</p></noscript>
+  </section>
+  <section id="how" aria-labelledby="how-title" class="reveal">
+   <h2 id="how-title">Agree on the intent.<br>Then write the code.</h2>
+   <div class="story"><h3>Make the brief together.</h3><p>Start with a rough idea or a detailed specification. The design partner asks relevant questions, explains recommendations and keeps proposed choices separate from your confirmed decisions.</p></div>
+   <div class="story"><h3>Choose the visual direction.</h3><p>Explore 15 styles, from Minimalism and Editorial Design to Bento UI and Cyberpunk. Compare reasons, alternatives and trade-offs. Combine compatible styles or choose your own direction.</p></div>
+   <div class="story"><h3>Approve the exact brief.</h3><p>Edit the shared understanding, confirm the summary and approve the final text. Generation uses that saved version. Changing a requirement requires a fresh approval.</p></div>
+   <figure><a href="media/design-interview.png" aria-label="Open full screenshot of the Synthetix design interview"><img src="media/design-interview.png" width="1440" height="1762" loading="lazy" alt="Real Synthetix interface showing a design conversation beside a shared requirements panel."></a><figcaption>A real planning session. The user retains control of the requirements.</figcaption></figure>
+  </section>
+  <section aria-labelledby="loop-title" class="reveal">
+   <h2 id="loop-title">The browser gets<br>a vote.</h2>
+   <p>Generate or import a page. Run it in Chromium. Collect JavaScript exceptions, console errors and failed behaviour assertions. Attempt a targeted repair, then rerun the same checks.</p>
+   <p>Each step leaves evidence: source versions, screenshots, reports and code differences. Restore an earlier version as an untested draft, review the changes and download your HTML.</p>
+   <figure><a href="media/workspace.png" aria-label="Open full screenshot of the Synthetix code and preview workspace"><img src="media/workspace.png" width="1440" height="1000" loading="lazy" alt="Real Synthetix workspace with source code, browser preview and saved browser-test results."></a><figcaption>The working tool, captured during a real generated-counter test.</figcaption></figure>
+   <p class="caption">Repairs stop after three attempts. Passing selected checks does not prove that every feature, layout or interaction is correct.</p>
+  </section>
+  <section aria-labelledby="workflows-title" class="reveal">
+   <h2 id="workflows-title">Start where<br>your work is.</h2>
+   <dl class="workflows"><div><dt>Build</dt><dd>Describe, discuss, approve and generate a self-contained website.</dd></div><div><dt>Repair</dt><dd>Import code, explain the intended behaviour and review assertions before correction.</dd></div><div><dt>Run locally</dt><dd>Serve your existing HTML/CSS/JavaScript on your computer without AI changes.</dd></div></dl>
+  </section>
+  <section id="start" aria-labelledby="start-title" class="reveal">
+   <h2 id="start-title">Your next build<br>starts locally.</h2>
+   <p>Use Python 3.12 on Windows and your own Nebius API key. The repository includes the application, setup instructions and regression tests.</p>
+   <div class="install"><pre id="install-command"><code>git clone https://github.com/Praharsh1409/synthetix.git
+cd synthetix</code></pre><button id="copy" type="button">Copy commands</button><p id="copy-status" role="status" aria-live="polite"></p></div>
+   <a class="button" href="https://github.com/Praharsh1409/synthetix#windows-setup">Open the setup guide ↗</a>
+   <p class="caption">This GitHub Pages site is the project showcase. The full application runs in Python; it is not hosted inside this page. Keep your API key in your local .env file.</p>
+  </section>
+  <section aria-labelledby="scope-title" class="reveal">
+   <h2 id="scope-title">Know the scope.</h2>
+   <details><summary>What can it build?</summary><p>Self-contained HTML/CSS/JavaScript frontends. Multiple views can live in one HTML file. Real payments, authentication, databases and email backends are outside the current scope.</p></details>
+   <details><summary>What uses my Nebius credits?</summary><p>AI conversations, generation, test planning and repair. Local inspection, hosting and this page’s scripted illustration do not call a model.</p></details>
+   <details><summary>What does a passing result mean?</summary><p>Only that the selected checks passed within their configured observation window. Test proposals and extracted requirements can be wrong, so human review remains part of the workflow.</p></details>
+   <details><summary>Is the local app ready for public multi-user hosting?</summary><p>It is a local single-user development tool. Public hosting requires authentication, account isolation and stronger process and resource controls. Browser restrictions are not a complete operating-system sandbox.</p></details>
+   <details><summary>Is this an official NVIDIA or Nebius product?</summary><p>No. Synthetix is an independent project built with NVIDIA Nemotron through Nebius Token Factory. The names identify the technologies used, not an endorsement.</p></details>
+  </section>
+  <footer><a class="wordmark" href="#main">Synthetix</a><p>Plan. Build. Test. Review.</p><a href="https://github.com/Praharsh1409/synthetix">Source on GitHub ↗</a></footer>
+ </main>
+</body>
+</html>

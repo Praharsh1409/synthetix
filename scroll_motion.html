@@ -1,0 +1,144 @@
+<span hidden aria-hidden="true"></span>
+<script>
+(() => {
+  window.synthetixMotion?.destroy();
+  const main = document.querySelector('[data-testid="stMain"]');
+  if (!main) return;
+  // Streamlit resets its own scroller. This layout uses document scrolling.
+  const previousRoute=window.synthetixRoute;
+  window.synthetixRoute=location.pathname;
+  if(previousRoute && previousRoute!==location.pathname && !location.hash) window.scrollTo(0,0);
+  // Keep the live node stable across Streamlit reruns; only its text changes.
+  let announcer=document.getElementById('synthetix-announcements');
+  if(!announcer) {
+    announcer=document.createElement('p');announcer.id='synthetix-announcements';
+    announcer.className='sr-only';announcer.setAttribute('role','status');
+    announcer.setAttribute('aria-live','polite');announcer.setAttribute('aria-atomic','true');
+    main.prepend(announcer);
+  }
+  const abort = new AbortController();
+  const options = {signal:abort.signal};
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const seen = new WeakSet();
+  let frame = 0;
+  const progress = document.createElement('div');
+  progress.className='sx-reading-progress';
+  progress.setAttribute('aria-hidden','true');
+  document.body.append(progress);
+  const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.remove('sx-pending');
+      entry.target.classList.add('sx-visible');
+      observer.unobserve(entry.target);
+    }
+  },{threshold:.08,rootMargin:'0px 0px -24px 0px'}) : null;
+  function prepare() {
+    const announcements=main.querySelectorAll('[data-workflow-announcement]');
+    const message=announcements.length ? announcements[announcements.length-1].dataset.workflowAnnouncement : '';
+    if(message!==announcer.textContent) announcer.textContent=message;
+
+    // Correct the native uploader's presentation role: it is a labelled group.
+    document.querySelectorAll('[data-testid="stFileUploaderDropzone"]').forEach(zone=>{
+      if(zone.getAttribute('role')==='presentation') zone.setAttribute('role','group');
+    });
+    // A folded navigation drawer must not remain in the reading/focus order.
+    const sidebar=document.querySelector('[data-testid="stSidebar"]');
+    if(sidebar) {
+      const collapsed=sidebar.dataset.collapsed==='true';
+      sidebar.inert=collapsed;
+      sidebar.setAttribute('aria-hidden',String(collapsed));
+      sidebar.querySelectorAll('[data-testid="stPageLink-NavLink"]').forEach(link=>{
+        const active=new URL(link.getAttribute('href') || '/',location.origin + '/').pathname.replace(/\/$/,'')===location.pathname.replace(/\/$/,'');
+        if(active) link.setAttribute('aria-current','page');
+        else link.removeAttribute('aria-current');
+      });
+    }
+    // Use explicit SVG menu marks, preserving Streamlit's labelled buttons.
+    document.querySelectorAll('[data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"], [data-testid="stCollapseSidebarButton"] [data-testid="stIconMaterial"]').forEach(span=>{
+      if(span.querySelector('svg')) return;
+      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('width','22');svg.setAttribute('height','22');svg.setAttribute('aria-hidden','true');
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d','M4 6h16M4 12h16M4 18h16');path.setAttribute('stroke','currentColor');path.setAttribute('stroke-width','2');
+      svg.append(path);span.replaceChildren(svg);
+    });
+    main.querySelectorAll('[data-reveal]').forEach(element=>{
+      if(seen.has(element)) return;
+      seen.add(element);
+      if(motion.matches || !observer) return;
+      const box=element.getBoundingClientRect();
+      if(0 > box.bottom) return;
+      element.classList.add('sx-motion');
+      const list=element.closest('.process-fields') || element.parentElement;
+      const index=[...list.querySelectorAll('[data-reveal]')].indexOf(element);
+      element.style.setProperty('--sx-delay',`${Math.max(0,index%3)*70}ms`);
+      element.classList.add('sx-pending');
+      observer.observe(element);
+    });
+    update();
+  }
+  function update() {
+    const length=document.documentElement.scrollHeight-innerHeight;
+    progress.style.transform=`scaleX(${length>0?Math.min(1,scrollY/length):0})`;
+  }
+  function schedule() {
+    if(frame) return;
+    frame=requestAnimationFrame(()=>{frame=0;prepare();});
+  }
+  const mutations=new MutationObserver(schedule);
+  mutations.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-collapsed']});
+  window.addEventListener('scroll',update,{...options,passive:true});
+  window.addEventListener('resize',schedule,options);
+  motion.addEventListener('change',()=>{
+    if(motion.matches) {
+      observer?.disconnect();
+      main.querySelectorAll('.sx-pending').forEach(e=>e.classList.remove('sx-pending'));
+    }
+  },options);
+  main.addEventListener('focusin',event=>{
+    const element=event.target.closest('.sx-pending');
+    if(element) {element.classList.remove('sx-pending');observer?.unobserve(element);}
+  },options);
+
+  // The counter is a deterministic, disclosed illustration. It makes no model call.
+  const specimen=main.querySelector('[data-live-counter]');
+  if(specimen) {
+    let count=0,increment=2;
+    const value=specimen.querySelector('[data-counter-value]');
+    const feedback=specimen.querySelector('[data-counter-feedback]');
+    const render=()=>{value.textContent=String(count);};
+    const increase=()=>{count+=increment;render();};
+    const reset=()=>{count=0;render();feedback.textContent='Expected after one increase: 1';};
+    specimen.querySelector('[data-counter-increase]').addEventListener('click',increase,options);
+    specimen.querySelector('[data-counter-reset]').addEventListener('click',reset,options);
+    specimen.querySelector('[data-counter-check]').addEventListener('click',()=>{
+      count=0;increase();
+      feedback.textContent=count===1 ? 'Passed: expected 1, observed 1.' : 'Failed: expected 1, observed '+count+'.';
+      feedback.dataset.result=count===1?'pass':'fail';
+    },options);
+    specimen.querySelector('[data-counter-fix]').addEventListener('click',event=>{
+      increment=increment===2?1:2;
+      specimen.querySelector('[data-increment-code]').textContent=String(increment);
+      event.target.textContent=increment===1?'Restore deliberate bug':'Try corrected example';
+      reset();
+      feedback.textContent=increment===1?'Corrected example selected. Test it again.':'Deliberate bug restored. Test it again.';
+    },options);
+  }
+  const intent=main.querySelector('#expected-increment');
+  intent?.addEventListener('input',()=>{
+    const expected=Number(intent.value);
+    const valid=intent.value!=='' && intent.validity.valid && Number.isInteger(expected);
+    intent.setAttribute('aria-invalid',String(!valid));
+    main.querySelector('[data-intent-expected]').textContent=valid?intent.value:'—';
+    main.querySelector('[data-intent-verdict]').textContent=valid
+      ? (expected===2?'Matches the requirement.':'Does not match the requirement.')
+      : 'Enter a whole number from 1 to 10.';
+  },options);
+  window.synthetixMotion={destroy(){
+    abort.abort();observer?.disconnect();mutations.disconnect();cancelAnimationFrame(frame);progress.remove();
+    main.querySelectorAll('.sx-pending').forEach(e=>e.classList.remove('sx-pending'));
+  }};
+  prepare();
+})();
+</script>

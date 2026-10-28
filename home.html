@@ -1,0 +1,57 @@
+<div class="home">
+ <section class="hero-layout" aria-labelledby="home-title">
+  <div class="hero-copy">
+   <h1 id="home-title">Build. Test.<br> Repair. Repeat.</h1>
+   <p>An AI-powered workspace that builds websites, detects code problems, and helps repair them through real browser testing.</p>
+   <div class="hero-links"><a class="sx-button" href="/build">Start building</a><a class="text-link" href="#feedback-loop">Explore how it works</a></div>
+   <p class="technology-note">NVIDIA Nemotron · Nebius Token Factory · Chromium</p>
+  </div>
+  <div class="hero-specimen" data-ui data-live-counter>
+   <div class="specimen-topbar"><strong>Counter / behaviour check</strong><span>Interactive example</span></div>
+   <div class="specimen">
+    <div class="specimen-code" role="group" aria-label="Counter source code"><p class="specimen-label">counter.js</p><pre><code>function increase() {
+  count += <span class="code-change" data-increment-code>2</span>;
+  render();
+}</code></pre></div>
+    <div class="specimen-counter"><p id="counter-label">Counter</p><output class="counter-value" data-counter-value aria-labelledby="counter-label" aria-live="polite" aria-atomic="true">0</output>
+     <div class="specimen-controls"><button type="button" data-counter-increase>Increase</button><button type="button" data-counter-reset>Reset</button><button type="button" data-counter-check>Test counter</button></div>
+     <p class="check-feedback" data-counter-feedback role="status" aria-live="polite" aria-atomic="true">Expected after one increase: 1</p>
+     <button class="check-action" type="button" data-counter-fix>Try corrected example</button>
+    </div>
+   </div>
+   <p class="specimen-note">Seeded +2 bug. Test it, then try the corrected example. This local illustration uses no AI credits.</p>
+  </div>
+ </section>
+ <section class="home-section" aria-labelledby="workflow-heading">
+  <h2 id="workflow-heading" data-reveal="heading">One workspace. Your starting point.</h2>
+  <p class="section-lead" data-reveal>Begin with a description, bring an existing page, or open code you already trust.</p>
+  <div class="workflow-grid">
+   <article class="workflow-card" data-reveal><h3>Build a website</h3><p>Turn your idea into an editable brief. Generate the interface, run browser checks, and review the result.</p><a class="text-link" href="/build">Open the builder</a></article>
+   <article class="workflow-card" data-reveal><h3>Repair code</h3><p>Explain the intended behaviour and approve checks before a repair runs.</p><a class="text-link" href="/repair">Import your code</a></article>
+   <article class="workflow-card" data-reveal><h3>Run locally</h3><p>Open your HTML, CSS, and JavaScript without AI changes.</p><a class="text-link" href="/host">Run a webpage</a></article>
+  </div>
+ </section>
+ <section class="home-section loop-layout" id="feedback-loop" aria-labelledby="loop-heading">
+  <div class="loop-copy"><h2 id="loop-heading" data-reveal="heading">A feedback loop you can inspect</h2><p data-reveal>Synthetix returns to the browser after a repair. A page that renders can still be wrong: behaviour checks connect the result to your intent.</p><a class="text-link" href="/demo">Open the controlled repair demo</a></div>
+  <ol class="loop-stages">
+   <li data-reveal><span class="step-marker" aria-hidden="true">1</span><div><strong>Describe or import</strong><p>Start from a website brief or a self-contained HTML document.</p></div></li>
+   <li data-reveal><span class="step-marker" aria-hidden="true">2</span><div><strong>Generate or inspect</strong><p>Review the brief or explain what the existing page should do.</p></div></li>
+   <li data-reveal><span class="step-marker" aria-hidden="true">3</span><div><strong>Run in Chromium</strong><p>Observe JavaScript errors, console errors, and selected interactions.</p></div></li>
+   <li data-reveal><span class="step-marker" aria-hidden="true">4</span><div><strong>Collect the failure</strong><p>Keep the code, failed expectation, screenshot, and report together.</p></div></li>
+   <li data-reveal><span class="step-marker" aria-hidden="true">5</span><div><strong>Attempt a repair</strong><p>Nemotron uses your intent and the observed failures to revise the code.</p></div></li>
+   <li data-reveal><span class="step-marker" aria-hidden="true">6</span><div><strong>Retest and compare</strong><p>Run the selected checks again, inspect changes, and download the HTML.</p></div></li>
+  </ol>
+ </section>
+ <section class="home-section evidence-layout" aria-labelledby="evidence-heading">
+  <div class="evidence-copy"><h2 id="evidence-heading" data-reveal="heading">The version and the verdict</h2><p data-reveal>Source, preview, diagnostics, and comparison live in the same workspace. Restore an earlier version as a new draft, then check it again.</p><p data-reveal>The example report is from a real saved counter repair. Its test selection is visible; it is not a claim that every possible interaction passed.</p><a class="text-link" href="/dashboard">Open your dashboard</a></div>
+  <div class="evidence-panel" data-ui data-reveal="picture"><h3>Saved counter repair</h3><div class="report-row"><span>AI repair attempts used</span><strong>__REPAIRS__</strong></div><div class="report-row"><span>Approved test steps</span><strong>__CHECK_COUNT__</strong></div><ul class="report-tests">__CHECK_ITEMS__</ul><p class="report-source">__REPORT_SOURCE__</p></div>
+ </section>
+ <section class="home-section faq" aria-labelledby="scope-heading"><h2 id="scope-heading" data-reveal="heading">Know what is checked</h2><div>
+  <details><summary>What can I build?</summary><p>Self-contained HTML, CSS, and JavaScript interfaces. Working payment, login, database, and email backends are outside the current scope.</p></details>
+  <details><summary>Does passing mean everything works?</summary><p>No. It means the selected checks passed. Appearance, accessibility, mobile layout, and other interactions still require review. The repair loop stops after three attempts if failures remain.</p></details>
+  <details><summary>How does the intended behaviour matter?</summary><div class="intent-controls"><label for="expected-increment">Expected increment per click</label><input id="expected-increment" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" aria-describedby="intent-help intent-verdict"><p id="intent-help">Enter a whole number from 1 to 10. The example code always adds two.</p><p>Observed: 2. Required: <strong data-intent-expected>1</strong>.</p><p id="intent-verdict" data-intent-verdict role="status" aria-live="polite" aria-atomic="true">Does not match the requirement.</p></div></details>
+  <details><summary>Which actions use Nebius credits?</summary><p>Brief improvement, test planning, generation, and AI repairs call Nemotron through Nebius Token Factory. Local inspection and hosting make no model calls.</p></details>
+  <details><summary>Is a local website public?</summary><p>No. Local links work on the computer running Synthetix while its local server is active. They are not public deployments.</p></details>
+ </div></section>
+ <footer class="home-footer"><span>Synthetix · Browser-tested interfaces</span><nav aria-label="Workspace shortcuts"><a href="/dashboard">Dashboard</a><a href="/build">Build</a><a href="/repair">Repair</a></nav><span>NVIDIA Nemotron through Nebius</span></footer>
+</div>
