@@ -4,6 +4,15 @@ from intent_checks import check_intent, validate_checks
 
 
 class BehaviourReliabilityTests(unittest.TestCase):
+    def test_non_string_model_actions_and_locators_are_validation_errors(self):
+        for key in ('action', 'by'):
+            for invalid in ({'nested': 'css'}, ['css'], None, 1):
+                step = {'action':'expect_text', 'by':'css', 'selector':'#count', 'text':'0'}
+                step[key] = invalid
+                with self.subTest(key=key, invalid=invalid):
+                    with self.assertRaises(ValueError):
+                        validate_checks([step])
+
     def test_hidden_text_is_not_a_user_visible_pass(self):
         result=check_intent('<output id="count" hidden>1</output><p>Visible: 999</p>',[
             {'action':'expect_text','by':'css','selector':'#count','text':'1'}])

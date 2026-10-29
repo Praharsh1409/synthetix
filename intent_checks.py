@@ -10,9 +10,9 @@ def validate_checks(checks):
     if not isinstance(checks, list) or len(checks) > 20:
         raise ValueError('Checks must be a JSON list containing at most 20 steps.')
     for index, item in enumerate(checks, 1):
-        if not isinstance(item, dict) or item.get('action') not in ACTIONS:
+        if not isinstance(item, dict) or not isinstance(item.get('action'), str) or item.get('action') not in ACTIONS:
             raise ValueError(f'Check {index}: unsupported action.')
-        if item.get('by') not in LOCATORS:
+        if not isinstance(item.get('by'), str) or item.get('by') not in LOCATORS:
             raise ValueError(f'Check {index}: choose a role, css, text, or label locator.')
         allowed = {'action', 'by', 'name', 'role', 'selector', 'text', 'value', 'description'}
         if set(item) - allowed:

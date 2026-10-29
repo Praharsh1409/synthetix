@@ -121,3 +121,15 @@ The `docs/` directory contains the public project website and `app.html`, which 
 Publish the website from **Settings → Pages → Deploy from a branch → main → /docs**. The `.nojekyll` file keeps it a plain static site. All website assets use relative paths, including when served under `/synthetix/`.
 
 The source repository includes no personal `.env`, virtual environment, conversations, saved projects, backups or internal audit logs. Third-party model access and browser downloads are separate from the source code.
+
+## Hackathon demonstration
+
+[Watch the public Synthetix demo on YouTube](https://youtu.be/iiLC2TvzU-M) (under three minutes).
+
+The video shows actual local application captures, a newly generated site and a deliberately seeded logic-bug repair. Both selected counter-check suites passed after one AI repair each. AI waits are shortened and synthetic narration is disclosed. The separate imported-code test-planning attempt failed schema validation; the video does not claim otherwise. Passing assertions do not certify visual quality or all interactions.
+
+The malformed-plan validator now rejects non-string action and locator fields as validation errors instead of crashing with TypeError. Validation on October 29, 2026: **142 local regression tests passed**, including the new malformed-field cases. This is a controlled regression result, not a live-model benchmark. Online AI workflows currently require the visitor's own Nebius key.
+
+## License
+
+Synthetix source is available under the [MIT License](LICENSE). Third-party packages and model services retain their own terms.
