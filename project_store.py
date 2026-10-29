@@ -3,7 +3,7 @@ from datetime import datetime
 import html
 import json
 from pathlib import Path
-from runtime_paths import artifacts_dir
+from runtime_paths import artifacts_dir, cloud_mode
 import re
 import uuid
 from artifact_io import write_text, write_json
@@ -65,7 +65,7 @@ def describe_run(folder):
     except OSError:
         pass
     status = summary.get('status', 'unavailable')
-    mode = ('Run locally' if status == 'hosted_as_submitted' else
+    mode = (('Run HTML' if cloud_mode() else 'Run locally') if status == 'hosted_as_submitted' else
             'Draft' if status == 'restored_unverified' else
             'Repair' if context.get('workflow') == 'repair' else
             'Demo' if summary.get('demo_label') else

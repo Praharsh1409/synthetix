@@ -160,7 +160,7 @@ def perform_job(job):
             st.session_state['run_folder'] = outcome['output_folder']
         if outcome.get('ok'):
             label = {'brief': 'Brief ready to review.', 'diagnosis': 'Code checked. Tell us its purpose next.',
-                     'repair_plan': 'Repair plan ready to review.', 'host': 'Local website is ready.',
+                     'repair_plan': 'Repair plan ready to review.', 'host': 'Browser preview is ready.' if cloud_mode() else 'Local website is ready.',
                      'interview': 'Design conversation saved.', 'run': 'Selected checks passed.'}.get(outcome.get('kind'), 'Done.')
             status.update(label=label, state='complete', expanded=False)
         else:
@@ -207,6 +207,7 @@ def code_editor(prefix):
 
 
 def render_workflow(workflow):
+    from runtime_paths import cloud_mode
     if workflow == 'Build a website':
         render_interview(perform_job, open_website_review)
 
@@ -273,7 +274,7 @@ def render_workflow(workflow):
                     st.caption('No behaviour assertions selected. Repair will be guided by your purpose and checked for runtime errors only.')
                 reviewed_key = 'reviewed_' + hashlib.sha256((signature + json.dumps(approved_checks, sort_keys=True)).encode()).hexdigest()
                 reviewed = st.checkbox('These checks match my intended behaviour', key=reviewed_key)
-                if st.button('Repair, verify and host locally', type='primary', disabled=not (reviewed and valid_checks), help='Approve valid behaviour checks above before starting a repair.'):
+                if st.button('Repair, verify and preview' if cloud_mode() else 'Repair, verify and host locally', type='primary', disabled=not (reviewed and valid_checks), help='Approve valid behaviour checks above before starting a repair.'):
                     perform_job({'workflow': 'repair', 'diagnosis_folder': diagnosis['folder'], 'purpose': purpose,
                                  'intent_checks': approved_checks, 'checks_reviewed': True})
             elif plan:
@@ -317,7 +318,7 @@ def feature_page(workflow, title, description):
     steps = {
         'Build a website': ['Understand the idea', 'Choose a direction', 'Approve the brief', 'Build and inspect'],
         'Repair code': ['Import and inspect', 'Explain the purpose', 'Approve tests', 'Repair and compare'],
-        'Host your code': ['Submit your page', 'Inspect and open locally'],
+        'Host your code': ['Submit your page', 'Inspect and preview' if cloud_mode() else 'Inspect and open locally'],
         'Controlled repair demo': ['Start with a seeded bug', 'Watch the real repair loop'],
     }.get(workflow, [])
     st.html('<ol class="workflow-guide" aria-label="Workflow steps">' + ''.join(
