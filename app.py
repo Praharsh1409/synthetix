@@ -330,7 +330,12 @@ def feature_page(workflow, title, description):
 
 def home_page():
     st.set_page_config(page_title='Synthetix · Browser-tested interfaces')
-    render_home(pages)
+    if cloud_mode():
+        # Native Streamlit navigation retains the visitor's temporary workspace.
+        # The local landing page's plain HTML links perform a full reload.
+        render_dashboard(pages)
+    else:
+        render_home(pages)
 
 
 def build_page():

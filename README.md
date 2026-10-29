@@ -4,7 +4,7 @@
 
 Synthetix is a local AI-assisted website builder and code-repair workspace. It uses **NVIDIA Nemotron through Nebius Token Factory** to collaborate on a design brief, generate self-contained HTML/CSS/JavaScript, inspect it in Chromium and attempt repairs when selected checks fail.
 
-[Project website](https://praharsh1409.github.io/synthetix/) · [How it works](#how-it-works) · [Windows setup](#windows-setup) · [Testing](#testing)
+[Use online](https://praharsh1409.github.io/synthetix/app.html) · [Project website](https://praharsh1409.github.io/synthetix/) · [How it works](#how-it-works) · [Windows setup](#windows-setup) · [Testing](#testing)
 
 ![Synthetix design interview and shared project requirements](docs/media/design-interview.png)
 
@@ -33,6 +33,20 @@ Review source, versions, screenshots and reports → export / run locally
 ```
 
 Repairs are bounded to three attempts. A runtime-only pass means no runtime failure was observed within the test window. Behaviour assertions are needed to verify intended functionality; neither result certifies every interaction, appearance or device.
+
+## Use online
+
+Open [Synthetix on the project website](https://praharsh1409.github.io/synthetix/app.html), or [open the app directly](https://synthetix-workspace.streamlit.app/).
+
+The online entry point is `cloud_app.py`. It gives each visitor an unguessable, server-managed temporary workspace. AI workflows use the visitor's Nebius key, entered in the password field and passed only to that visitor's worker process. The owner's environment key is never a fallback. Keys are not saved in requests, project files or the repository. Browser inspection and Run HTML do not require a model key.
+
+Online HTML runs in the existing isolated browser preview; the app does not give remote visitors unusable `127.0.0.1` links. Download HTML to keep it or run it locally. Sessions are temporary: refreshing, disconnecting, hibernation or redeployment can lose access. This release does not provide accounts, permanent storage or a production service guarantee.
+
+### Free Community Cloud deployment
+
+Deploy `Praharsh1409/synthetix`, branch `main`, entry point `cloud_app.py`, Python 3.12. No owner API secret is required. `packages.txt` installs Debian Chromium and its sandbox helper. Chromium sandboxing stays enabled; a host that cannot support it must return an execution failure rather than disable the protection. An installed system browser can differ from Playwright's bundled version and must be verified on the target host.
+
+Only one hosted worker runs at a time. A ten-minute worker deadline and a 25 MB visitor-workspace limit bound individual jobs. These controls supplement the offline browser, filtered environment and CSP; they are not full OS isolation or a denial-of-service guarantee. Do not upload secrets or private source to a public demo host. Free hosting has resource limits and can sleep. AI provider usage is billed to the key owner.
 
 ## Windows setup
 
@@ -93,12 +107,12 @@ Planning conversations and saved runs are stored in `artifacts/` on your compute
 - Treats uploaded/generated pages as untrusted. Chromium checks restrict network access; previews and hosted pages use opaque sandboxed frames and content security policies.
 - Keeps API keys server-side and filters browser-process environment variables. External assets, cross-origin APIs, navigation and some storage features are intentionally restricted.
 - Uses explicit timeouts and bounded diagnostics, inputs and allocations. These controls are **not** a complete OS/container or CPU/RSS/GPU quota system.
-- Runs as a local single-user development tool. Public multi-user hosting requires authentication, account isolation and stronger process/resource controls.
+- The local entry point remains single-user. The online entry point provides temporary visitor isolation and bring-your-own-key access; it does not provide authenticated accounts, durable storage or full operating-system isolation.
 - AI extraction, style rankings and test proposals can be wrong. Review the decisions and assertions before approving them.
 
 ## GitHub Pages
 
-The `docs/` directory contains the public project website, screenshots and an explicitly labelled interactive illustration. GitHub Pages cannot run the Streamlit/Python application. To use the full tool, follow the local setup above.
+The `docs/` directory contains the public project website and `app.html`, which embeds the real Streamlit app using the supported `?embed=true` URL. GitHub Pages serves the shell; Streamlit Community Cloud runs Python and Chromium. The separate counter illustration remains labelled as scripted. The direct-app link is available if a browser blocks embedded apps.
 
 Publish the website from **Settings → Pages → Deploy from a branch → main → /docs**. The `.nojekyll` file keeps it a plain static site. All website assets use relative paths, including when served under `/synthetix/`.
 

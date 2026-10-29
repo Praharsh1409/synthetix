@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0B0D14">
+  <meta name="description" content="Use the Synthetix website builder and code-repair workspace online.">
+  <title>Workspace · Synthetix</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="workspace.css">
+  <script src="workspace.js" defer></script>
+</head>
+<body class="workspace-shell">
+  <a class="skip" href="#app">Skip to workspace</a>
+  <header class="workspace-toolbar">
+    <a class="wordmark" href="./">Synthetix</a>
+    <span class="host-note">Online workspace</span>
+    <a id="open-app" href="https://synthetix-workspace.streamlit.app/" target="_blank" rel="noopener noreferrer">Open in a new tab ↗</a>
+  </header>
+  <p id="connection-note" role="status">Opening the workspace. A sleeping free server can take a little longer to start.</p>
+  <main id="app" tabindex="-1">
+    <iframe title="Synthetix online development workspace" src="https://synthetix-workspace.streamlit.app/?embed=true" referrerpolicy="strict-origin-when-cross-origin" allow="clipboard-write"></iframe>
+  </main>
+  <noscript><p>Open <a href="https://synthetix-workspace.streamlit.app/">Synthetix directly</a> to use the workspace.</p></noscript>
+</body>
+</html>

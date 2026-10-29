@@ -1,0 +1,9 @@
+.workspace-shell{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.workspace-toolbar{display:flex;align-items:center;gap:24px;padding:10px 20px;background:var(--surface);border-bottom:1px solid #272d3d;min-height:56px}
+.workspace-toolbar .wordmark{font-size:19px}
+.workspace-toolbar>a:last-child{margin-left:auto;font-size:14px;min-height:44px;display:flex;align-items:center}
+.host-note{color:var(--muted);font-size:13px}
+.workspace-shell #connection-note{padding:7px 20px;margin:0;color:var(--muted);font-size:13px;background:var(--bg)}
+.workspace-shell main{width:100%;margin:0;flex:1;min-height:0;display:flex}
+.workspace-shell iframe{display:block;width:100%;height:100%;border:0;background:var(--bg)}
+@media(max-width:540px){.host-note{display:none}.workspace-toolbar{padding:6px 12px;gap:12px}.workspace-toolbar>a:last-child{font-size:12px}.workspace-shell #connection-note{font-size:12px;padding:6px 12px}}

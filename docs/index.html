@@ -11,12 +11,12 @@
 </head>
 <body>
  <a class="skip" href="#main">Skip to content</a>
- <header class="masthead"><a class="wordmark" href="#main" aria-label="Synthetix home"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M25 8H12a6 6 0 0 0 0 12h8a4 4 0 0 1 0 8H7M7 24h13a6 6 0 0 0 0-12h-8a4 4 0 0 1 0-8h13"/></svg>Synthetix</a><nav aria-label="Main"><a href="#how">How it works</a><a href="#start">Run locally</a><a href="https://github.com/Praharsh1409/synthetix">GitHub ↗</a></nav></header>
+ <header class="masthead"><a class="wordmark" href="#main" aria-label="Synthetix home"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M25 8H12a6 6 0 0 0 0 12h8a4 4 0 0 1 0 8H7M7 24h13a6 6 0 0 0 0-12h-8a4 4 0 0 1 0-8h13"/></svg>Synthetix</a><nav aria-label="Main"><a href="#how">How it works</a><a href="app.html">Open app</a><a href="#start">Local setup</a><a href="https://github.com/Praharsh1409/synthetix">GitHub ↗</a></nav></header>
  <main id="main" tabindex="-1">
   <section class="hero" aria-labelledby="title">
    <h1 id="title">A website, with<br>evidence it works.</h1>
    <p class="lead">Plan it with an AI design partner. Build it with Nemotron. Run it in a real browser, inspect the failures, and review the repair.</p>
-   <div class="actions"><a class="button" href="#start">Get started locally</a><a class="text-link" href="#example">Try the small example ↓</a></div>
+   <div class="actions"><a class="button" href="app.html">Open Synthetix</a><a class="text-link" href="#example">Try the small example ↓</a></div>
    <p class="caption technology">NVIDIA Nemotron on Nebius Token Factory.<br>Python, Streamlit and Playwright Chromium.</p>
   </section>
   <section id="example" aria-labelledby="example-title" class="reveal">
@@ -48,22 +48,22 @@
   </section>
   <section aria-labelledby="workflows-title" class="reveal">
    <h2 id="workflows-title">Start where<br>your work is.</h2>
-   <dl class="workflows"><div><dt>Build</dt><dd>Describe, discuss, approve and generate a self-contained website.</dd></div><div><dt>Repair</dt><dd>Import code, explain the intended behaviour and review assertions before correction.</dd></div><div><dt>Run locally</dt><dd>Serve your existing HTML/CSS/JavaScript on your computer without AI changes.</dd></div></dl>
+   <dl class="workflows"><div><dt>Build</dt><dd>Describe, discuss, approve and generate a self-contained website.</dd></div><div><dt>Repair</dt><dd>Import code, explain the intended behaviour and review assertions before correction.</dd></div><div><dt>Run HTML</dt><dd>Inspect and preview your existing code online without AI edits. The local app can also serve it on your computer.</dd></div></dl>
   </section>
   <section id="start" aria-labelledby="start-title" class="reveal">
-   <h2 id="start-title">Your next build<br>starts locally.</h2>
-   <p>Use Python 3.12 on Windows and your own Nebius API key. The repository includes the application, setup instructions and regression tests.</p>
+   <h2 id="start-title">Build online.<br>Or on your computer.</h2>
+   <p><a href="app.html">Open the online workspace</a> to build, repair and run HTML without installing Python. Connect your own Nebius API key for AI features. Browser checks need no key. Online workspaces are temporary, so download your HTML before leaving.</p><p>Prefer local development? Use Python 3.12 on Windows and your own Nebius API key. The repository includes the application, setup instructions and regression tests.</p>
    <div class="install"><pre id="install-command"><code>git clone https://github.com/Praharsh1409/synthetix.git
 cd synthetix</code></pre><button id="copy" type="button">Copy commands</button><p id="copy-status" role="status" aria-live="polite"></p></div>
    <a class="button" href="https://github.com/Praharsh1409/synthetix#windows-setup">Open the setup guide ↗</a>
-   <p class="caption">This GitHub Pages site is the project showcase. The full application runs in Python; it is not hosted inside this page. Keep your API key in your local .env file.</p>
+   <p class="caption">The online workspace runs on Streamlit Community Cloud and is embedded here through GitHub Pages. Free hosting may sleep when unused. AI calls use your Nebius credits. The local app remains available.</p>
   </section>
   <section aria-labelledby="scope-title" class="reveal">
    <h2 id="scope-title">Know the scope.</h2>
    <details><summary>What can it build?</summary><p>Self-contained HTML/CSS/JavaScript frontends. Multiple views can live in one HTML file. Real payments, authentication, databases and email backends are outside the current scope.</p></details>
    <details><summary>What uses my Nebius credits?</summary><p>AI conversations, generation, test planning and repair. Local inspection, hosting and this page’s scripted illustration do not call a model.</p></details>
    <details><summary>What does a passing result mean?</summary><p>Only that the selected checks passed within their configured observation window. Test proposals and extracted requirements can be wrong, so human review remains part of the workflow.</p></details>
-   <details><summary>Is the local app ready for public multi-user hosting?</summary><p>It is a local single-user development tool. Public hosting requires authentication, account isolation and stronger process and resource controls. Browser restrictions are not a complete operating-system sandbox.</p></details>
+   <details><summary>How does the online workspace handle my work?</summary><p>Each visitor receives a separate temporary workspace. API keys stay in the current server session and are not written to project files. Work is not permanent: download your HTML before closing or refreshing. The free host may restart or sleep. Browser restrictions and resource limits are not a complete operating-system sandbox; do not upload sensitive code.</p></details>
    <details><summary>Is this an official NVIDIA or Nebius product?</summary><p>No. Synthetix is an independent project built with NVIDIA Nemotron through Nebius Token Factory. The names identify the technologies used, not an endorsement.</p></details>
   </section>
   <footer><a class="wordmark" href="#main">Synthetix</a><p>Plan. Build. Test. Review.</p><a href="https://github.com/Praharsh1409/synthetix">Source on GitHub ↗</a></footer>
