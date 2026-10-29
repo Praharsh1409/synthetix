@@ -7,6 +7,7 @@ import guided_interview as guided
 from design_styles import STYLES, compatibility, preview
 from text_safety import markdown_text
 from runtime_paths import cloud_mode
+from design_refinement_ui import render_design_refinement
 
 
 def text(value):
@@ -41,7 +42,7 @@ def request_suggestions(state, perform_job):
 
 def render_start(perform_job):
     st.header('What are we making?')
-    st.write('Describe the idea. We will work through one decision at a time, then build the website from your approved brief.')
+    st.write('Describe the idea. We will work through one decision at a time, refine the design and motion, then build from your approved brief.')
     with st.form('new_design_interview'):
         kind = st.selectbox('Project starting point', ['Custom website', 'Portfolio', 'SaaS landing page', 'Dashboard', 'E-commerce frontend', 'Blog', 'Educational website', 'Developer tool'])
         initial = st.text_area('Describe your website idea', max_chars=3800, height=140,
@@ -183,6 +184,7 @@ def render_final(state, perform_job, start_build=None):
                 updated.update(pending=False, last_error=None)
                 commit(state, updated)
         return
+    render_design_refinement(state, perform_job)
     draft_value = state['draft_brief'] or interview.render_brief(state)
     approved = state.get('approved_brief')
     with st.form('final_design_brief_' + str(state['revision'])):
@@ -261,7 +263,7 @@ def render_interview(perform_job, start_build=None):
         heading, action = st.columns([3, 1])
         with heading:
             st.header({'idea': 'Understand the idea', 'design': 'Choose the design', 'details': 'Refine the details', 'brief': 'Approve and build'}[current])
-            st.caption('Idea → Design → Details → Approval → Review the website')
+            st.caption('Idea → Design → Details → Visual refinement → Approval → Review the website')
         if action.button('New interview', width='stretch'):
             st.query_params.pop('interview', None); st.session_state.pop('design_interview_id', None); st.rerun()
     # One primary decision in the 2.2:1 canvas/summary grid. Phones stack the rail.

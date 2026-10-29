@@ -11,6 +11,7 @@ Synthetix is a local AI-assisted website builder and code-repair workspace. It u
 ## What you can do
 
 - **Build:** describe an idea, answer one question at a time using three AI suggestions or a custom answer, then choose a design direction from the 15 supported styles. Saved answers move the interview forward automatically.
+- **AI design refinement:** before a new project's final approval, Nemotron proposes a concrete visual concept, layout hierarchy, typography, surface treatment, subject-specific detail and up to three purposeful animations. Review and edit that proposal inside the final brief, refine it again, or use the original brief. Existing saved projects can opt in with **Refine the design with AI**. Changes to requirements invalidate stale proposals. Explicit no-animation preferences and reduced-motion support are preserved.
 - **Review the website:** approving the exact final brief starts generation and opens the review page. The supplied Synthetix logo animates while real work is running. Percentage progress counts five completed stages, not elapsed time; completion requires saved HTML and a passing browser report. Inspect the actual preview and export the HTML here.
 - **Repair:** import HTML, inspect runtime errors, describe intended behaviour, review browser assertions, then attempt a repair and rerun the same checks.
 - **Run locally:** serve a self-contained webpage on your computer without AI changes to its source.
@@ -72,6 +73,8 @@ Open **http://127.0.0.1:8501/**. The default listener is restricted to your comp
 
 AI conversations, generation, test planning and repair use your Nebius credits. Local browser inspection, hosting, tests and the static website's illustrative counter make no model calls.
 
+The extra design pass normally makes one AI request, with at most one schema-correction retry. A failure keeps your original requirements and does not automatically retry on rerenders. Refinement proposes presentation details; it never approves itself or guarantees visual quality. The exact final text you approve, including any edits, remains the generation source of truth. Generation and repairs are instructed to implement and preserve the chosen layout and motion rather than flattening the design to eliminate a runtime error.
+
 ## Testing
 
 ```powershell
@@ -91,6 +94,7 @@ Guided-flow verification on October 29, 2026: **116 tests passed**, including sa
 | `app.py`, `interview_ui.py`, `workspace_ui.py` | Streamlit navigation, planning and code workspace |
 | `design_interview.py`, `design_styles.py` | Persistent requirements, recommendations and approval gates |
 | `guided_interview.py`, `generation_ui.py` | One-decision interview transitions, three AI suggestions plus custom answers, and real generation-stage progress |
+| `design_refinement.py`, `design_refinement_ui.py` | Reviewable, requirement-bound art direction and animation proposals before brief approval |
 | `ui_worker.py` | Model and browser operations outside the UI event loop |
 | `nebius_tasks.py`, `generate_ui.py`, `self_heal.py` | Nebius/Nemotron integration |
 | `synthetix.py` | Generation, check, bounded repair and retest pipeline |

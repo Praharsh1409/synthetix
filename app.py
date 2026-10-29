@@ -161,7 +161,8 @@ def perform_job(job):
         if outcome.get('ok'):
             label = {'brief': 'Brief ready to review.', 'diagnosis': 'Code checked. Tell us its purpose next.',
                      'repair_plan': 'Repair plan ready to review.', 'host': 'Browser preview is ready.' if cloud_mode() else 'Local website is ready.',
-                     'interview': 'Design conversation saved.', 'run': 'Selected checks passed.'}.get(outcome.get('kind'), 'Done.')
+                     'interview': 'Design conversation saved.', 'design_refinement': 'Design and motion plan ready to review.',
+                     'run': 'Selected checks passed.'}.get(outcome.get('kind'), 'Done.')
             status.update(label=label, state='complete', expanded=False)
         else:
             status.update(label='The task did not finish successfully.', state='error', expanded=True)

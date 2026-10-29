@@ -148,7 +148,7 @@ def create(initial):
            'requirements':{key:{'value':DEFAULTS.get(key,''),'status':'default' if key in DEFAULTS else 'missing','source':'Platform default' if key in DEFAULTS else ''} for key in FIELDS},
            'recommendations':[],'questions':[],'style_recheck':[],'conflict_ack':None,
            'summary_approval':None,'draft_brief':'','approved_brief':None,
-           'pending':False,'last_error':None,'build_runs':[]}
+           'pending':False,'last_error':None,'build_runs':[], 'auto_design_refinement':True}
     state['conversation'].append({'role':'user','content':initial.strip(),'at':now()})
     state['pending']=True
     return save(state)
@@ -365,10 +365,14 @@ def stage(state):
 
 
 def render_brief(state):
-    lines=['Website design specification', 'Implement the decisions below as the source of truth.', 'Scope: '+SCOPE]
+    lines=['Website design specification', 'Implement the decisions below as the source of truth.', 'Scope: '+SCOPE,
+           'Original idea (context only; later decisions below override it): '+state['initial_request']]
     lines += [label+': '+state['requirements'][key]['value'] for key,label in FIELDS.items() if state['requirements'][key]['value']]
     assumptions=[label+' is not specified; use a restrained, accessible choice consistent with the selected style.' for key,label in FIELDS.items() if key not in CRITICAL and not state['requirements'][key]['value']]
     if assumptions:lines.append('Remaining non-critical assumptions: '+' '.join(assumptions))
+    from design_refinement import proposal_text
+    proposal=proposal_text(state)
+    if proposal:lines.append(proposal)
     return '\n'.join(lines)
 
 

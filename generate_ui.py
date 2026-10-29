@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from browser_check import check_html
+from design_refinement import generation_guidance
 
 
 PROJECT_FOLDER = Path(__file__).parent
@@ -70,7 +71,8 @@ def generate_html(user_prompt):
                     "Avoid a stock gradient hero or repeated card grid unless the brief requests it. "
                     "Do not invent customer logos, testimonials, numerical business claims, "
                     "or functioning backend integrations. "
-                    "Keep the page responsive and the code concise."
+                    "Keep the page responsive and the code concise. "
+                    + generation_guidance(user_prompt)
                 ),
             },
             {

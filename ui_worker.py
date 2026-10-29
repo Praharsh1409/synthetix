@@ -8,6 +8,7 @@ from pathlib import Path
 from runtime_paths import artifacts_dir
 import uuid
 import design_interview as interview
+import design_refinement
 from generation_ui import emit_stage
 
 from browser_check import check_html
@@ -62,10 +63,20 @@ def attach_host(summary, title):
 
 def handle(request):
     workflow = request.get('workflow')
-    if workflow in ('interview_turn','interview_build'):
+    if workflow in ('interview_turn','interview_refine','interview_build'):
         state=interview.load(request.get('interview_id'))
         if request.get('revision')!=state['revision']:
             raise ValueError('The interview changed. Reload before continuing.')
+        if workflow=='interview_refine':
+            print('Improving the visual design and motion plan...',flush=True)
+            try:
+                updated=design_refinement.refine(state)
+                interview.save(updated,expected_revision=state['revision'])
+            except Exception as error:
+                try:interview.save(design_refinement.failed(state,error),expected_revision=state['revision'])
+                except (OSError,ValueError):pass
+                return {'ok':False,'kind':'design_refinement','error':public_error(error),'interview_id':state['id']}
+            return {'ok':True,'kind':'design_refinement','interview_id':state['id']}
         if workflow=='interview_turn':
             print('Planning the next design decision...',flush=True)
             try:
