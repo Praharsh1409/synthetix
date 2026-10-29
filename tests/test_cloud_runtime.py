@@ -117,3 +117,13 @@ with visitor_workspace('c'*64):
         self.assertFalse(app.exception)
         self.assertFalse(json.loads(app.json[-1].value)['ok'])
         self.assertIn('Add your Nebius API key',json.loads(app.json[-1].value)['error'])
+
+    def test_visitor_key_survives_navigation_to_build(self):
+        app=AppTest.from_file(str(runtime.ROOT/'cloud_app.py')).run(timeout=20)
+        app.text_input(key='visitor_nebius_key').set_value('test-only-visitor-key').run()
+        next(button for button in app.button if button.label=='New project').click().run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.session_state['visitor_nebius_key'],'test-only-visitor-key')
+        # A further rerun must not clear the key after navigation completes.
+        app.run()
+        self.assertEqual(app.session_state['visitor_nebius_key'],'test-only-visitor-key')

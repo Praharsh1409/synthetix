@@ -119,7 +119,7 @@ with st.sidebar:
     if cloud_mode():
         with st.expander('Connect your AI', expanded=not bool(st.session_state.get('visitor_nebius_key'))):
             st.caption('Enter your own Nebius Token Factory key. AI calls use your credits. It stays in this server session and is not written to project files.')
-            st.text_input('Nebius API key', type='password', key='visitor_nebius_key', max_chars=1000)
+            st.text_input('Nebius API key', type='password', key='visitor_nebius_key', max_chars=1000, persist_state='session')
             st.caption('Only submit a key on this trusted Synthetix app. Browser inspection works without it.')
         st.caption('Temporary visitor workspace. Download your HTML before closing or refreshing this tab; this free host is not permanent project storage.')
     navigation_slot = st.container()
