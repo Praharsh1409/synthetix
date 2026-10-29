@@ -10,7 +10,8 @@ Synthetix is a local AI-assisted website builder and code-repair workspace. It u
 
 ## What you can do
 
-- **Build:** describe an idea, discuss requirements with the design partner, compare 15 styles, edit the shared understanding and approve the exact design brief before generation.
+- **Build:** describe an idea, answer one question at a time using three AI suggestions or a custom answer, then choose a design direction from the 15 supported styles. Saved answers move the interview forward automatically.
+- **Review the website:** approving the exact final brief starts generation and opens the review page. The supplied Synthetix logo animates while real work is running. Percentage progress counts five completed stages, not elapsed time; completion requires saved HTML and a passing browser report. Inspect the actual preview and export the HTML here.
 - **Repair:** import HTML, inspect runtime errors, describe intended behaviour, review browser assertions, then attempt a repair and rerun the same checks.
 - **Run locally:** serve a self-contained webpage on your computer without AI changes to its source.
 - **Review:** inspect versions, screenshots, diagnostics and code differences; restore an earlier version as an untested draft and download HTML.
@@ -67,12 +68,15 @@ AI conversations, generation, test planning and repair use your Nebius credits. 
 
 The regression suite uses temporary artifacts, Chromium, isolated Streamlit tests and controlled API responses. It does not require a live API key. Validation before this release on October 28, 2026: **95 tests passed**. This is a dated validation result, not a live benchmark or a guarantee of generated-site quality.
 
+Guided-flow verification on October 29, 2026: **116 tests passed**, including saved single-question answers, custom-answer recovery, extraction before question selection, approval-triggered generation, stage-based progress, compact completion, and saved-site recovery. Live model and browser acceptance checks are reported separately from these controlled regression tests.
+
 ## Architecture
 
 | Component | Responsibility |
 |---|---|
 | `app.py`, `interview_ui.py`, `workspace_ui.py` | Streamlit navigation, planning and code workspace |
 | `design_interview.py`, `design_styles.py` | Persistent requirements, recommendations and approval gates |
+| `guided_interview.py`, `generation_ui.py` | One-decision interview transitions, three AI suggestions plus custom answers, and real generation-stage progress |
 | `ui_worker.py` | Model and browser operations outside the UI event loop |
 | `nebius_tasks.py`, `generate_ui.py`, `self_heal.py` | Nebius/Nemotron integration |
 | `synthetix.py` | Generation, check, bounded repair and retest pipeline |
@@ -80,7 +84,7 @@ The regression suite uses temporary artifacts, Chromium, isolated Streamlit test
 | `project_store.py`, `artifact_io.py`, `reporting.py` | Checkpoints, history and honest verdicts |
 | `hosting.py`, `local_host.py`, `web_documents.py` | Loopback-only hosting and isolated previews |
 
-Planning conversations and saved runs are stored in `artifacts/` on your computer. They are excluded from this repository.
+Planning conversations and saved runs are stored in `artifacts/` on your computer. They are excluded from this repository. If AI suggestions fail, already saved answers remain available and a custom answer or explicit retry can continue the interview. Changing requirements requires fresh brief approval. Website generation is not automatically retried on page rerenders.
 
 ## Scope and security
 

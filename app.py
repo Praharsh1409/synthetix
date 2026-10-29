@@ -18,6 +18,9 @@ from web_documents import assemble_document, preview_frame_html
 from project_store import list_runs
 from workspace_ui import render_workspace, render_dashboard
 from interview_ui import render_interview
+from generation_ui import render_generation, saved_review
+import design_interview as design_interview
+import guided_interview as guided_interview
 
 
 ROOT = Path(__file__).resolve().parent
@@ -59,7 +62,7 @@ def preview_document(document, title):
     st.markdown(preview_frame_html(document, title), unsafe_allow_html=True)
 
 
-def execute_job(job, status):
+def execute_job(job, status, on_progress=None):
     folder = ARTIFACTS / 'ui_jobs' / uuid.uuid4().hex
     folder.mkdir(parents=True, exist_ok=False)
     request_file = folder / 'request.json'
@@ -80,6 +83,7 @@ def execute_job(job, status):
         for line in process.stdout:
             line = line.rstrip()
             lines.append(line)
+            if on_progress:on_progress(line)
             if line.startswith(('Generating', 'Checking version', 'Running counter',
                                 'Asking Nemotron', 'CONTROLLED DEMO', 'PASS:', 'Improving', 'Planning', 'Hosting', 'Checking your')):
                 status.write(markdown_text(line))
@@ -148,6 +152,14 @@ def perform_job(job):
     return outcome
 
 
+def open_website_review(job):
+    st.session_state['website_review_request'] = job
+    st.session_state['website_review_last_request'] = job
+    st.session_state.pop('website_review_outcome', None)
+    st.session_state['wb_layout'] = 'Preview focus'
+    st.switch_page(pages['review'])
+
+
 def code_editor(prefix):
     uploaded = st.file_uploader('Upload an HTML file (optional)', type=['html', 'htm'], key=prefix + '_upload', max_upload_size=1)
     if uploaded:
@@ -175,7 +187,7 @@ def code_editor(prefix):
 
 def render_workflow(workflow):
     if workflow == 'Build a website':
-        render_interview(perform_job)
+        render_interview(perform_job, open_website_review)
 
     elif workflow == 'Repair code':
         st.header('First, check the code you have')
@@ -333,10 +345,61 @@ def workspace_page():
     render_saved_result()
 
 
+def website_review_page():
+    st.set_page_config(page_title='Review the website · Synthetix')
+    st.title('Review the website')
+    if 'wb_layout' not in st.session_state:
+        st.session_state['wb_layout'] = 'Preview focus'
+    request = st.session_state.pop('website_review_request', None)
+    if request is not None:
+        st.query_params['interview'] = request['interview_id']
+        st.session_state['website_review_last_request'] = request
+        outcome = render_generation(request, execute_job)
+        st.session_state['website_review_outcome'] = outcome
+        if outcome.get('output_folder'):
+            st.session_state['run_folder'] = outcome['output_folder']
+    else:
+        outcome = st.session_state.get('website_review_outcome')
+        identifier=st.query_params.get('interview') or st.session_state.get('design_interview_id')
+        if outcome is None and identifier:
+            try:
+                outcome=saved_review(design_interview.load(identifier))
+                if outcome is not None:
+                    st.session_state['website_review_outcome']=outcome
+                    if outcome.get('output_folder'):st.session_state['run_folder']=outcome['output_folder']
+            except (OSError,ValueError) as error:
+                st.error(markdown_text(str(error)))
+    if outcome is not None:
+        if outcome.get('ok'):
+            st.success('Your website is ready to review.')
+            st.caption('Try the preview and inspect the diagnostics. A runtime pass does not verify every requested interaction or the visual design.')
+        else:
+            if request is None:
+                st.error(markdown_text(outcome.get('error', 'Website preparation did not finish.')))
+            prior = st.session_state.get('website_review_last_request')
+            if prior and st.button('Retry website generation', type='primary'):
+                try:
+                    state = design_interview.load(prior['interview_id'])
+                    if not state.get('approved_brief') or state['approved_brief']['hash'] != prior['approval_hash']:
+                        raise ValueError('The brief changed. Review and approve it again before retrying.')
+                    open_website_review(guided_interview.build_request(state, prior.get('use_counter_checks', False)))
+                except (OSError, ValueError) as error:
+                    st.error(markdown_text(str(error)))
+        if outcome.get('output_folder'):
+            render_saved_result()
+    elif st.session_state.get('run_folder'):
+        st.caption('Open the preview, inspect its evidence, and download the HTML when you are ready.')
+        render_saved_result()
+    else:
+        st.info('Approve a website brief in Build a website. Generation will start here automatically, then the preview and reports will appear.')
+        st.page_link(pages['build'], label='Plan a website')
+
+
 pages = {
     'home': st.Page(home_page, title='Home', default=True),
     'dashboard': st.Page(dashboard_page, title='Dashboard', url_path='dashboard'),
     'build': st.Page(build_page, title='Build a website', url_path='build'),
+    'review': st.Page(website_review_page, title='Review the website', url_path='review'),
     'repair': st.Page(repair_page, title='Repair code', url_path='repair'),
     'host': st.Page(host_page, title='Run locally', url_path='host'),
     'workspace': st.Page(workspace_page, title='Workspace', url_path='workspace'),
@@ -344,7 +407,7 @@ pages = {
 }
 navigation = st.navigation(list(pages.values()), position='hidden')
 with navigation_slot:
-    for key in ['dashboard','build','repair','host','workspace']:
+    for key in ['dashboard','build','review','repair','host','workspace']:
         st.page_link(pages[key], width='stretch')
     st.caption('Explore')
     for key in ['home','demo']:

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import uuid
 import design_interview as interview
+from generation_ui import emit_stage
 
 from browser_check import check_html
 from counter_check import check_counter
@@ -80,8 +81,10 @@ def handle(request):
             raise ValueError('The approved brief changed. Review it again before building.')
         counter=request.get('use_counter_checks',False)
         if not isinstance(counter,bool):raise ValueError('Invalid validation selection.')
-        summary=run_pipeline(prompt,use_counter_checks=counter,workflow_context=context)
+        emit_stage('brief')
+        summary=run_pipeline(prompt,use_counter_checks=counter,workflow_context=context,progress=emit_stage)
         summary=attach_host(summary,'Generated website')
+        if summary.get('status')=='no_runtime_errors_observed':emit_stage('preview')
         current=interview.load(state['id'])
         current['build_runs'].append({'folder':summary['output_folder'],'approval_hash':state['approved_brief']['hash'],'at':interview.now()})
         interview.save(current,expected_revision=current['revision'])

@@ -120,7 +120,7 @@ def check_version(document, screenshot_name, use_counter_checks=False, intent_ch
 
 
 def run_pipeline(user_prompt, use_counter_checks=False, initial_html=None, demo_label=None,
-                 intent_checks=None, force_initial_repair=False, workflow_context=None):
+                 intent_checks=None, force_initial_repair=False, workflow_context=None, progress=None):
     if not isinstance(user_prompt,str) or not 1<=len(user_prompt.strip())<=12000:
         raise ValueError('Enter a prompt containing 1 to 12,000 characters.')
     if not isinstance(use_counter_checks,bool):raise ValueError('Invalid counter-check selection.')
@@ -155,6 +155,7 @@ def run_pipeline(user_prompt, use_counter_checks=False, initial_html=None, demo_
             print('Generating the first version...',flush=True)
             phase='generation'
             current_html=generate_html(user_prompt)
+            if progress:progress('generated')
         else:
             current_html=initial_html
             if not isinstance(current_html,str):raise ValueError('Initial HTML must be text.')
@@ -178,11 +179,13 @@ def run_pipeline(user_prompt, use_counter_checks=False, initial_html=None, demo_
                            error='Browser execution could not complete. No successful result is claimed; inspect the report and retry.')
                 return summary
             if not any(errors.values()) and not result['purpose_review_requested']:
+                if progress:progress('checked')
                 final_path=output_folder/'final.html'
                 write_text(final_path,current_html)
                 checkpoint('no_runtime_errors_observed',final_html=str(final_path),
                            counter_behavior_verified=use_counter_checks,
                            intent_checks_verified=bool(intent_checks))
+                if progress:progress('saved')
                 print('Selected checks passed. Final HTML: '+str(final_path),flush=True)
                 return summary
             if repair_count==MAX_REPAIRS:

@@ -181,6 +181,22 @@ pre,code {font-family:var(--font-code)!important;}
 /* Synthetix planning canvas: one sheet, supporting rail; existing palette/type kept.
    Desktop uses (available width - 32px gap) in 2.2:1 columns. Phone stacks both. */
 .st-key-interview-canvas {min-width:0;}
+.st-key-interview-canvas [data-testid="stRadio"] {margin:16px 0;}
+.st-key-interview-canvas [data-testid="stRadio"] label {padding:10px 12px;min-height:48px;border:1px solid var(--color-border);border-radius:6px;align-items:flex-start;}
+.st-key-interview-canvas [data-testid="stRadio"] label:hover {background:var(--color-hover);}
+.st-key-interview-canvas [data-testid="stRadio"] label:has(input:checked) {border-color:var(--color-accent);background:var(--color-surface);}
+.st-key-interview-canvas [data-testid="stRadio"] label p {overflow-wrap:anywhere;}
+.st-key-website-generation {max-width:900px;margin:24px auto 36px;padding:28px;background:var(--color-secondary);border:1px solid var(--color-border);border-radius:12px;}
+.st-key-website-generation h2,.st-key-website-generation h3 {font-size:24px!important;}
+.st-key-website-generation [data-testid="stProgress"] {margin:20px 0 8px;}
+.sx-build-loader {width:112px;height:112px;position:relative;margin:0 0 24px;display:grid;place-items:center;}
+.sx-build-loader img {width:82px;height:82px;object-fit:contain;display:block;}
+.sx-build-orbit {position:absolute;inset:0;border:2px solid var(--color-border);border-top-color:var(--color-cyan);border-right-color:var(--color-accent);border-radius:50%;}
+.sx-build-loader.is-active .sx-build-orbit {animation:sx-build-rotation 1.6s linear infinite;}
+.sx-build-loader.is-finished .sx-build-orbit {border-color:var(--color-border);}
+@keyframes sx-build-rotation {to {transform:rotate(360deg);}}
+@media(max-width:640px) {.st-key-website-generation {padding:18px;margin:12px 0 24px;}.sx-build-loader {width:96px;height:96px;}.sx-build-loader img {width:72px;height:72px;}}
+@media(prefers-reduced-motion:reduce) {.sx-build-loader.is-active .sx-build-orbit {animation:none!important;}}
 .st-key-interview-live-brief {background:var(--color-surface);border:1px solid var(--color-border);border-radius:10px;padding:20px;}
 .st-key-interview-live-brief h3 {font-size:18px!important;}
 .st-key-interview-live-brief p {font-size:14px;overflow-wrap:anywhere;}
