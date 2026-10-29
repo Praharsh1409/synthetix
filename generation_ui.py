@@ -2,6 +2,7 @@
 import base64
 import json
 from pathlib import Path
+from runtime_paths import artifacts_dir
 
 import streamlit as st
 from text_safety import markdown_text
@@ -43,7 +44,7 @@ def successful_result(outcome):
         return False
     try:
         folder = Path(outcome['output_folder']).resolve()
-        folder.relative_to((ROOT / 'artifacts').resolve())
+        folder.relative_to(artifacts_dir(ROOT / 'artifacts').resolve())
         final = folder / 'final.html'
         if folder.is_symlink() or final.is_symlink() or not final.is_file() or final.stat().st_size == 0:
             return False
@@ -73,7 +74,7 @@ def saved_review(state):
         return None
     try:
         folder=Path(matching[-1]['folder']).resolve()
-        folder.relative_to((ROOT/'artifacts').resolve())
+        folder.relative_to(artifacts_dir(ROOT/'artifacts').resolve())
         summary=json.loads((folder/'summary.json').read_text(encoding='utf-8'))
         outcome={'ok':summary.get('status')=='no_runtime_errors_observed','kind':'run','output_folder':str(folder),'summary':summary}
         if not successful_result(outcome):

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+from runtime_paths import interview_dir
 import re
 import time
 import uuid
@@ -44,8 +45,8 @@ def digest(value):
 def path_for(identifier):
     if not isinstance(identifier,str) or not re.fullmatch('[a-f0-9]{32}',identifier):
         raise ValueError('Invalid interview ID.')
-    folder=STORE/identifier
-    if STORE.is_symlink() or folder.is_symlink() or (folder/'interview.json').is_symlink():
+    folder=interview_dir(STORE)/identifier
+    if interview_dir(STORE).is_symlink() or folder.is_symlink() or (folder/'interview.json').is_symlink():
         raise ValueError('Interview paths cannot be links.')
     return folder/'interview.json'
 
@@ -131,8 +132,8 @@ def save(state, expected_revision=None):
 
 def list_interviews():
     records=[]
-    if not STORE.exists():return records
-    for path in STORE.glob('*/interview.json'):
+    if not interview_dir(STORE).exists():return records
+    for path in interview_dir(STORE).glob('*/interview.json'):
         try:
             state=load(path.parent.name)
             records.append({'id':state['id'],'title':state['initial_request'][:65], 'updated_at':state['updated_at']})

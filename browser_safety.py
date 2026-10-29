@@ -1,6 +1,9 @@
 """Shared bounded, offline Chromium contexts for untrusted documents."""
 from contextlib import contextmanager
 import os
+import shutil
+import sys
+from runtime_paths import cloud_mode
 
 from playwright.sync_api import sync_playwright
 from web_documents import restricted_document
@@ -40,7 +43,13 @@ def browser_environment():
 @contextmanager
 def isolated_page(report):
     with sync_playwright() as playwright:
-        browser=playwright.chromium.launch(headless=True,chromium_sandbox=True,
+        options = {}
+        if cloud_mode() and sys.platform == 'linux':
+            executable = shutil.which('chromium')
+            if not executable:
+                raise RuntimeError('The hosted browser is not installed. The administrator must deploy packages.txt; checks cannot run yet.')
+            options['executable_path'] = executable
+        browser=playwright.chromium.launch(**options,headless=True,chromium_sandbox=True,
                                              timeout=10000,env=browser_environment(),
                                              args=['--js-flags=--max-old-space-size=128'])
         try:

@@ -14,3 +14,4 @@ backups/
 *.log
 synthetix_backup.py
 synthetix.before-*.py
+.streamlit/secrets.toml

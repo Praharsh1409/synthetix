@@ -5,6 +5,7 @@ from artifact_io import write_text, write_json, public_error
 from browser_safety import ERROR_KINDS
 from datetime import datetime
 from pathlib import Path
+from runtime_paths import artifacts_dir
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -127,7 +128,7 @@ def run_pipeline(user_prompt, use_counter_checks=False, initial_html=None, demo_
     intent_checks=validate_checks([] if intent_checks is None else intent_checks)
     prefix='synthetix_demo_' if demo_label else 'synthetix_'
     run_id=prefix+datetime.now().strftime('%Y%m%d_%H%M%S_%f')+'_'+uuid.uuid4().hex[:6]
-    output_folder=PROJECT_FOLDER/'artifacts'/run_id
+    output_folder=artifacts_dir(PROJECT_FOLDER/'artifacts')/run_id
     output_folder.mkdir(parents=True,exist_ok=False)
     initial_source='supplied_html' if initial_html is not None else 'model_generation'
     manifest={'demo_label':demo_label,'initial_source':initial_source,

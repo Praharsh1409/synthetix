@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from runtime_paths import artifacts_dir
 
 from browser_safety import empty_report, isolated_page, load_document, finish_report, execution_error
 
@@ -8,7 +9,7 @@ ARTIFACTS=Path(__file__).parent/'artifacts'
 
 
 def check_html(html_code, screenshot_name):
-    output_folder=ARTIFACTS.resolve()
+    output_folder=artifacts_dir(ARTIFACTS).resolve()
     screenshot_path=(output_folder/screenshot_name).resolve()
     screenshot_path.relative_to(output_folder)
     screenshot_path.parent.mkdir(parents=True,exist_ok=True)

@@ -6,6 +6,7 @@ import design_interview as interview
 import guided_interview as guided
 from design_styles import STYLES, compatibility, preview
 from text_safety import markdown_text
+from runtime_paths import cloud_mode
 
 
 def text(value):
@@ -45,7 +46,7 @@ def render_start(perform_job):
         kind = st.selectbox('Project starting point', ['Custom website', 'Portfolio', 'SaaS landing page', 'Dashboard', 'E-commerce frontend', 'Blog', 'Educational website', 'Developer tool'])
         initial = st.text_area('Describe your website idea', max_chars=3800, height=140,
             placeholder='For example: a photography portfolio for local clients, with a filterable gallery and a warm editorial feel.')
-        st.caption('Self-contained HTML/CSS/JavaScript. AI requests use Nebius credits. Your answers are saved locally.')
+        st.caption('Self-contained HTML/CSS/JavaScript. AI requests use Nebius credits. Answers are saved in this temporary session.' if cloud_mode() else 'Self-contained HTML/CSS/JavaScript. AI requests use Nebius credits. Your answers are saved locally.')
         begin = st.form_submit_button('Begin design interview', type='primary')
     if begin:
         try:

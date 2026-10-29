@@ -9,6 +9,7 @@ from browser_safety import ERROR_KINDS
 from reporting import report_problem, version_verdict
 
 from hosting import running_host
+from runtime_paths import cloud_mode
 from intent_checks import describe_check
 from project_store import describe_run, list_runs, read_json, rename_run, restore_version
 
@@ -203,7 +204,9 @@ def render_workspace(folder, perform_job, preview_document, pages):
             st.warning('Local hosting could not start: ' + markdown_text(summary['hosting_error']))
         site = summary.get('local_site') or {}
         host = running_host()
-        if host and f':{host["port"]}/' in site.get('url',''):
+        if cloud_mode():
+            st.caption('This page is running in the isolated preview above. Download HTML to keep it or run it on your own computer. The hosted server does not publish links to your localhost.')
+        elif host and f':{host["port"]}/' in site.get('url',''):
             st.link_button('Open locally hosted website', site['url'])
         elif item['status'] in ('no_runtime_errors_observed','hosted_as_submitted','hosting_failed'):
             if st.button('Start local hosting', key='host_' + item['folder'].name):
@@ -233,13 +236,13 @@ def render_dashboard(pages):
             st.write('Find browser errors and verify the behaviour that matters.')
             st.page_link(pages['repair'], label='Repair existing code')
         with st.container(border=True, key='dashboard-host'):
-            st.page_link(pages['host'], label='Run locally')
+            st.page_link(pages['host'], label='Run HTML' if cloud_mode() else 'Run locally')
             st.caption('Open your own webpage without AI changes.')
     recent, activity = st.columns([1.7, 1], gap='medium')
     with recent:
         with st.container(border=True, key='recent-runs'):
             st.header('Recent projects')
-            st.caption('Saved runs on this computer. Each opens with its source and browser evidence.')
+            st.caption('Saved runs in this temporary visitor session.' if cloud_mode() else 'Saved runs on this computer. Each opens with its source and browser evidence.')
             if not runs:
                 st.info('No saved projects yet. Build a website or import code to get started.')
             for item in runs[:5]:

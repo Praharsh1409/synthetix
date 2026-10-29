@@ -12,6 +12,7 @@ import uuid
 from urllib.request import Request, urlopen
 from artifact_io import write_text, write_json
 from web_documents import isolated_document
+from runtime_paths import cloud_mode
 
 ROOT = Path(__file__).resolve().parent
 SITES = ROOT / 'artifacts' / 'local_sites'
@@ -20,6 +21,8 @@ _spawned_processes = {}
 
 
 def running_host():
+    if cloud_mode():
+        return None
     try:
         record = json.loads(STATE.read_text(encoding='utf-8'))
         port = record['port']
@@ -95,6 +98,9 @@ def ensure_host():
 def publish_html(document, title='Synthetix site', source='submitted_html', site_id=None):
     if not isinstance(document, str) or not document.strip():
         raise ValueError('There is no HTML to host.')
+    if cloud_mode():
+        return {'mode': 'browser_preview', 'title': str(title)[:120], 'source': source,
+                'http_verified': False, 'note': 'Available in the browser preview. Download HTML to run it on your computer.'}
     site_id = site_id or uuid.uuid4().hex
     if not re.fullmatch(r'[a-f0-9]{32}', site_id):
         raise ValueError('Invalid local site ID.')

@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from runtime_paths import artifacts_dir
 import uuid
 import design_interview as interview
 from generation_ui import emit_stage
@@ -27,7 +28,7 @@ ARTIFACTS = ROOT / 'artifacts'
 
 def safe_folder(raw):
     folder = Path(raw).resolve()
-    folder.relative_to(ARTIFACTS.resolve())
+    folder.relative_to(artifacts_dir(ARTIFACTS).resolve())
     if not folder.name.startswith('synthetix_') or not folder.is_dir():
         raise ValueError('Invalid run folder.')
     return folder
@@ -36,7 +37,7 @@ def safe_folder(raw):
 
 
 def create_folder(kind):
-    folder = ARTIFACTS / ('synthetix_' + kind + '_' + datetime.now().strftime('%Y%m%d_%H%M%S_%f') + '_' + uuid.uuid4().hex[:6])
+    folder = artifacts_dir(ARTIFACTS) / ('synthetix_' + kind + '_' + datetime.now().strftime('%Y%m%d_%H%M%S_%f') + '_' + uuid.uuid4().hex[:6])
     folder.mkdir(parents=True, exist_ok=False)
     return folder
 

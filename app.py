@@ -4,10 +4,13 @@ import html
 import json
 import os
 from pathlib import Path
+from runtime_paths import artifacts_dir
 import re
 import subprocess
 import sys
 import uuid
+import threading
+from runtime_paths import cloud_mode, worker_environment, requires_model, job_slot
 
 import streamlit as st
 from text_safety import markdown_text
@@ -53,7 +56,7 @@ def read_json(path):
 def artifact_path(raw):
     """Only display files inside this project's artifacts directory."""
     path = Path(raw).resolve()
-    path.relative_to(ARTIFACTS.resolve())
+    path.relative_to(artifacts_dir(ARTIFACTS).resolve())
     return path
 
 
@@ -63,14 +66,20 @@ def preview_document(document, title):
 
 
 def execute_job(job, status, on_progress=None):
-    folder = ARTIFACTS / 'ui_jobs' / uuid.uuid4().hex
+    key = st.session_state.get('visitor_nebius_key', '') if cloud_mode() else ''
+    if cloud_mode() and requires_model(job) and not key.strip():
+        return {'ok': False, 'error': 'Add your Nebius API key in the sidebar to use AI. Browser inspection and running pasted HTML do not need a key.'}
+    with job_slot():
+        return execute_worker(job, status, on_progress, key)
+
+
+def execute_worker(job, status, on_progress=None, api_key=''):
+    folder = artifacts_dir(ARTIFACTS) / 'ui_jobs' / uuid.uuid4().hex
     folder.mkdir(parents=True, exist_ok=False)
     request_file = folder / 'request.json'
     result_file = folder / 'result.json'
     request_file.write_text(json.dumps(job), encoding='utf-8')
-    environment = os.environ.copy()
-    environment['PYTHONUTF8'] = '1'
-    environment['PYTHONIOENCODING'] = 'utf-8'
+    environment = worker_environment(os.environ, api_key)
     process = subprocess.Popen(
         [sys.executable, '-u', str(ROOT / 'ui_worker.py'),
          '--request', str(request_file), '--result', str(result_file)],
@@ -78,6 +87,10 @@ def execute_job(job, status, on_progress=None):
         stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace',
         creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
     )
+    deadline = threading.Timer(600, process.kill) if cloud_mode() else None
+    if deadline:
+        deadline.daemon = True
+        deadline.start()
     lines = []
     try:
         for line in process.stdout:
@@ -89,18 +102,26 @@ def execute_job(job, status, on_progress=None):
                 status.write(markdown_text(line))
         process.wait()
     finally:
+        if deadline:
+            deadline.cancel()
         if process.poll() is None:
             process.terminate()
             process.wait(timeout=10)
         process.stdout.close()
     (folder / 'worker.log').write_text('\n'.join(lines), encoding='utf-8')
     if not result_file.exists():
-        return {'ok': False, 'error': 'The worker stopped before returning a result. Check the terminal.'}
+        return {'ok': False, 'error': 'The worker stopped or reached its ten-minute limit before returning a result. Your saved code remains available; try a smaller request.'}
     return read_json(result_file)
 
 
 with st.sidebar:
     st.html('<div class="brand"><span class="brand-mark" aria-hidden="true">S</span>Synthetix</div><p class="sidebar-description">AI development workspace</p>')
+    if cloud_mode():
+        with st.expander('Connect your AI', expanded=not bool(st.session_state.get('visitor_nebius_key'))):
+            st.caption('Enter your own Nebius Token Factory key. AI calls use your credits. It stays in this server session and is not written to project files.')
+            st.text_input('Nebius API key', type='password', key='visitor_nebius_key', max_chars=1000)
+            st.caption('Only submit a key on this trusted Synthetix app. Browser inspection works without it.')
+        st.caption('Temporary visitor workspace. Download your HTML before closing or refreshing this tab; this free host is not permanent project storage.')
     navigation_slot = st.container()
     with st.expander('Saved projects'):
         saved_runs = list_runs()
@@ -261,12 +282,11 @@ def render_workflow(workflow):
             st.info('The code has changed. Click Find errors again before requesting repair.')
 
     elif workflow == 'Host your code':
-        st.header('Publish your code on this computer')
-        st.caption('Paste a self-contained HTML/CSS/JavaScript page. This workflow makes no model calls '
-                   'and does not change your code. The URL is local to this computer.')
+        st.header('Run your code in the browser' if cloud_mode() else 'Publish your code on this computer')
+        st.caption('Paste a self-contained HTML/CSS/JavaScript page. No AI calls or edits. Online, the page opens in the isolated preview; download the HTML to run it on your own computer.' if cloud_mode() else 'Paste a self-contained HTML/CSS/JavaScript page. This workflow makes no model calls and does not change your code. The URL is local to this computer.')
         title = st.text_input('Site name', value='My website', max_chars=120)
         code = code_editor('host')
-        if st.button('Check and host locally', type='primary'):
+        if st.button('Check and run in browser' if cloud_mode() else 'Check and host locally', type='primary'):
             perform_job({'workflow': 'host_code', 'title': title, **code})
 
     else:
@@ -324,8 +344,8 @@ def repair_page():
 
 
 def host_page():
-    feature_page('Host your code', 'Run locally',
-                 'Open your HTML, CSS, and JavaScript on this computer without AI edits.')
+    feature_page('Host your code', 'Run HTML' if cloud_mode() else 'Run locally',
+                 'Inspect and run your HTML, CSS, and JavaScript without AI edits.')
 
 
 def demo_page():
@@ -401,7 +421,7 @@ pages = {
     'build': st.Page(build_page, title='Build a website', url_path='build'),
     'review': st.Page(website_review_page, title='Review the website', url_path='review'),
     'repair': st.Page(repair_page, title='Repair code', url_path='repair'),
-    'host': st.Page(host_page, title='Run locally', url_path='host'),
+    'host': st.Page(host_page, title='Run HTML' if cloud_mode() else 'Run locally', url_path='host'),
     'workspace': st.Page(workspace_page, title='Workspace', url_path='workspace'),
     'demo': st.Page(demo_page, title='Repair demo', url_path='demo'),
 }

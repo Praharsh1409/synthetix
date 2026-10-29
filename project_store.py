@@ -3,6 +3,7 @@ from datetime import datetime
 import html
 import json
 from pathlib import Path
+from runtime_paths import artifacts_dir
 import re
 import uuid
 from artifact_io import write_text, write_json
@@ -25,7 +26,7 @@ def read_json(path, default=None):
 
 def safe_run(raw):
     folder = Path(raw).resolve()
-    folder.relative_to(ARTIFACTS.resolve())
+    folder.relative_to(artifacts_dir(ARTIFACTS).resolve())
     if not folder.name.startswith('synthetix_') or not folder.is_dir():
         raise ValueError('Choose a saved Synthetix run.')
     return folder
@@ -90,7 +91,7 @@ def describe_run(folder):
 
 def list_runs(limit=100):
     found = []
-    for folder in ARTIFACTS.glob('synthetix_*'):
+    for folder in artifacts_dir(ARTIFACTS).glob('synthetix_*'):
         if not folder.is_dir() or not (folder / 'summary.json').is_file():
             continue
         try:
@@ -139,7 +140,7 @@ def restore_version(folder, name):
     """Branch a version into an unverified draft; never overwrite prior evidence."""
     original = describe_run(folder)
     document = source_file(folder, name).read_bytes().decode('utf-8')
-    draft = ARTIFACTS / ('synthetix_draft_' + datetime.now().strftime('%Y%m%d_%H%M%S_%f') + '_' + uuid.uuid4().hex[:6])
+    draft = artifacts_dir(ARTIFACTS) / ('synthetix_draft_' + datetime.now().strftime('%Y%m%d_%H%M%S_%f') + '_' + uuid.uuid4().hex[:6])
     draft.mkdir(parents=True, exist_ok=False)
     write_text(draft/'version_0.html',document)
     manifest = dict(validation_manifest(folder))

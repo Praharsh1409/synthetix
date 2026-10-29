@@ -3,6 +3,7 @@ import base64
 import html
 import json
 from pathlib import Path
+from runtime_paths import artifacts_dir
 
 import streamlit as st
 
@@ -25,7 +26,7 @@ def apply_design():
 def render_home(pages):
     document = (ROOT / 'home.html').read_text(encoding='utf-8')
     # Show a genuine saved report; never invent successful run statistics.
-    folder = ROOT / 'artifacts' / 'synthetix_20261024_200009_615019'
+    folder = artifacts_dir(ROOT / 'artifacts') / 'synthetix_20261024_200009_615019'
     try:
         summary = json.loads((folder / 'summary.json').read_text(encoding='utf-8'))
         report = json.loads((folder / 'report_1.json').read_text(encoding='utf-8'))

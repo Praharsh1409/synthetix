@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+from runtime_paths import artifacts_dir
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -121,7 +122,7 @@ def main():
         "%Y%m%d_%H%M%S_%f"
     )
 
-    output_folder = PROJECT_FOLDER / "artifacts" / run_id
+    output_folder = artifacts_dir(PROJECT_FOLDER / "artifacts") / run_id
     output_folder.mkdir(parents=True, exist_ok=True)
 
     html_path = output_folder / "generated.html"
