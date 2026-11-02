@@ -225,7 +225,7 @@ render_interview(lambda job: None)
         next(w for w in app.radio if w.label=='Choose a design direction').set_value('Custom design').run()
         select=next(w for w in app.multiselect if w.label=='Choose your styles (up to three)')
         self.assertEqual(set(select.options),set(STYLES))
-        self.assertFalse(any(b.label=='Approve brief and build website' for b in app.button))
+        self.assertFalse(any(b.label=='Approve brief and generate ↗' for b in app.button))
 
     def test_ui_approval_submits_exact_edited_text_and_dispatches_build(self):
         state=d.save(d.confirm_summary(complete(self.reply())),expected_revision=self.state['revision'])
@@ -240,7 +240,7 @@ render_interview(no_build)
         draft=state['draft_brief']+'\nUse a compact footer.'
         next(w for w in app.text_area if w.label=='Editable design brief').set_value(draft)
         app.checkbox[0].check()
-        next(b for b in app.button if b.label=='Approve brief and build website').click().run()
+        next(b for b in app.button if b.label=='Approve brief and generate ↗').click().run()
         self.assertFalse(app.exception)
         approved=d.load(state['id']);self.assertEqual(approved['approved_brief']['text'],draft)
         queued=app.session_state['website_review_request']
@@ -248,7 +248,7 @@ render_interview(no_build)
         self.assertEqual(queued['revision'],approved['revision'])
         edited=draft+'\nUse accessible labels on icons.'
         next(w for w in app.text_area if w.label=='Editable design brief').set_value(edited)
-        next(b for b in app.button if b.label=='Approve brief and build website').click().run()
+        next(b for b in app.button if b.label=='Approve brief and generate ↗').click().run()
         self.assertFalse(app.exception)
         # The new approval checkbox is unchecked; stale approval cannot dispatch edited text.
         self.assertEqual(d.load(state['id'])['draft_brief'],draft)
@@ -258,7 +258,7 @@ render_interview(no_build)
     def test_ui_cannot_approve_without_the_review_checkbox(self):
         state=d.save(d.confirm_summary(complete(self.reply())),expected_revision=self.state['revision'])
         app=AppTest.from_string(f"import streamlit as st\nfrom interview_ui import render_interview\nst.session_state['design_interview_id']={state['id']!r}\nrender_interview(lambda job:None)",default_timeout=15).run()
-        next(b for b in app.button if b.label=='Approve brief and build website').click().run()
+        next(b for b in app.button if b.label=='Approve brief and generate ↗').click().run()
         self.assertFalse(app.exception)
         self.assertIsNone(d.load(state['id'])['approved_brief'])
         self.assertTrue(any('approval checkbox' in error.value for error in app.error))

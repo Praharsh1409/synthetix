@@ -133,3 +133,10 @@ The malformed-plan validator now rejects non-string action and locator fields as
 ## License
 
 Synthetix source is available under the [MIT License](LICENSE). Third-party packages and model services retain their own terms.
+
+
+## Graphite creative workbench
+
+The interface includes three prebuilt interactive examples, three composition directions, and an explicitly simulated walkthrough. Choosing an example makes no model request. Start this project opens the real planning flow, where the editable brief must be approved before generation. Preview, Code, Checks, and Versions retain real browser evidence and saved-source downloads. Session code drafts are temporary; inspect edited code to save a new run.
+
+The graphite theme surrounds isolated previews without recolouring their documents. Space Grotesk, Instrument Serif italic, IBM Plex Mono, and example imagery are stored locally. See [asset sources and font licenses](assets/studio/SOURCES.txt); third-party assets retain their respective licenses.

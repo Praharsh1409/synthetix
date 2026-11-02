@@ -184,7 +184,7 @@ render_interview(lambda job:None,navigate)
 """
         app=AppTest.from_string(code,default_timeout=15).run()
         next(c for c in app.checkbox if c.label=='I approve this exact design brief').check()
-        next(b for b in app.button if b.label=='Approve brief and build website').click().run()
+        next(b for b in app.button if b.label=='Approve brief and generate ↗').click().run()
         self.assertFalse(app.exception)
         self.assertEqual(app.session_state['destination'],'review')
         self.assertEqual(app.session_state['dispatched']['approval_hash'],d.load(saved['id'])['approved_brief']['hash'])

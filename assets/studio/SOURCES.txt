@@ -1,0 +1,13 @@
+Fonts (Google Fonts upstream, SIL Open Font License):
+Space Grotesk variable: https://github.com/google/fonts/tree/main/ofl/spacegrotesk
+Instrument Serif italic: https://github.com/google/fonts/tree/main/ofl/instrumentserif
+IBM Plex Mono regular: https://github.com/google/fonts/tree/main/ofl/ibmplexmono
+Individual OFL notices are included in this directory.
+
+Local sample imagery (Unsplash image CDN, resized for the browser input limit):
+landscape.jpg: https://images.unsplash.com/photo-1470770841072-f978cf4d019e
+architecture.jpg: https://images.unsplash.com/photo-1487958449943-2429e8be8625
+ceramics.jpg: https://images.unsplash.com/photo-1578749556568-bc2c40e68b61
+https://unsplash.com/license
+
+These assets belong to the authored prebuilt examples. They are not screenshots of AI-generated websites.

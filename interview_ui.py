@@ -43,9 +43,11 @@ def request_suggestions(state, perform_job):
 def render_start(perform_job):
     st.header('What are we making?')
     st.write('Describe the idea. We will work through one decision at a time, refine the design and motion, then build from your approved brief.')
+    if 'planning_seed' in st.session_state:
+        st.session_state['planning_idea'] = st.session_state.pop('planning_seed')
     with st.form('new_design_interview'):
         kind = st.selectbox('Project starting point', ['Custom website', 'Portfolio', 'SaaS landing page', 'Dashboard', 'E-commerce frontend', 'Blog', 'Educational website', 'Developer tool'])
-        initial = st.text_area('Describe your website idea', max_chars=3800, height=140,
+        initial = st.text_area('Describe your website idea', key='planning_idea', persist_state='session', max_chars=3800, height=140,
             placeholder='For example: a photography portfolio for local clients, with a filterable gallery and a warm editorial feel.')
         st.caption('Self-contained HTML/CSS/JavaScript. AI requests use Nebius credits. Answers are saved in this temporary session.' if cloud_mode() else 'Self-contained HTML/CSS/JavaScript. AI requests use Nebius credits. Your answers are saved locally.')
         begin = st.form_submit_button('Begin design interview', type='primary')
@@ -192,7 +194,7 @@ def render_final(state, perform_job, start_build=None):
         validation = st.selectbox('Validation', ['Runtime errors only', 'Counter behaviour + runtime'], key='interview_build_checks')
         st.caption('Counter checks are only suitable for Increase, Decrease and Reset interfaces. Runtime checks alone do not establish every requested behaviour.')
         reviewed = st.checkbox('I approve this exact design brief', key='approve_brief_' + interview.digest(draft_value))
-        approve = st.form_submit_button('Approve brief and build website', type='primary')
+        approve = st.form_submit_button('Approve brief and generate ↗', type='primary')
     if approve:
         if not reviewed:
             st.error('Review the brief and select the approval checkbox before building.')
@@ -225,8 +227,8 @@ def render_previous_answers(state):
                 st.error(text(error))
 
 
-def render_live_brief(state):
-    with st.container(key='interview-live-brief'):
+def render_live_brief(state, suffix=""):
+    with st.container(key='interview-live-brief'+suffix):
         st.subheader('Your website so far')
         st.caption('Saved locally · revision ' + str(state['revision']))
         for key in ('purpose', 'audience', 'goals', 'selected_styles', 'functionality'):
@@ -284,4 +286,8 @@ def render_interview(perform_job, start_build=None):
             updated.update(design_confirmed=False, pending=False, last_error=None)
             commit(state, updated)
     with right:
-        render_live_brief(state)
+        with st.container(key='brief-desktop'):
+            render_live_brief(state, '-desktop')
+        with st.container(key='brief-mobile'):
+            with st.expander('Your live design brief', expanded=False):
+                render_live_brief(state, '-mobile')

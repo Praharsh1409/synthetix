@@ -13,14 +13,14 @@ ROOT = Path(__file__).resolve().parent
 @st.cache_data
 def presentation_styles(style_version):
     fonts = []
-    for weight in [400, 500, 700]:
-        data = base64.b64encode((ROOT / 'assets' / f'general-sans-{weight}.woff2').read_bytes()).decode('ascii')
-        fonts.append(f"@font-face {{font-family:'General Sans';src:url(data:font/woff2;base64,{data}) format('woff2');font-style:normal;font-weight:{weight};font-display:swap;}}")
-    return '<style>' + ''.join(fonts) + (ROOT / 'site.css').read_text(encoding='utf-8') + '</style>'
+    for name, family, style, weight in [('space.ttf','Space Grotesk','normal','400 700'),('serif.ttf','Instrument Serif','italic','400'),('mono.ttf','IBM Plex Mono','normal','400')]:
+        data = base64.b64encode((ROOT/'assets'/'studio'/name).read_bytes()).decode('ascii')
+        fonts.append(f"@font-face {{font-family:'{family}';src:url(data:font/ttf;base64,{data}) format('truetype');font-style:{style};font-weight:{weight};font-display:swap;}}")
+    return '<style>' + ''.join(fonts) + (ROOT / 'site.css').read_text(encoding='utf-8') + (ROOT / 'graphite.css').read_text(encoding='utf-8') + '</style>'
 
 
 def apply_design():
-    st.html(presentation_styles((ROOT / 'site.css').stat().st_mtime_ns))
+    st.html(presentation_styles(((ROOT / 'site.css').stat().st_mtime_ns, (ROOT / 'graphite.css').stat().st_mtime_ns)))
 
 
 def render_home(pages):

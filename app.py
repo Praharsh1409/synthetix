@@ -15,6 +15,7 @@ from runtime_paths import cloud_mode, worker_environment, requires_model, job_sl
 import streamlit as st
 from text_safety import markdown_text
 from ui_design import apply_design, render_home, install_scroll_motion
+from editorial_home import render_welcome
 from hosting import running_host, stop_host
 from intent_checks import describe_check, validate_checks
 from web_documents import assemble_document, preview_frame_html
@@ -115,7 +116,7 @@ def execute_worker(job, status, on_progress=None, api_key=''):
 
 
 with st.sidebar:
-    st.html('<div class="brand"><span class="brand-mark" aria-hidden="true">S</span>Synthetix</div><p class="sidebar-description">AI development workspace</p>')
+    st.html('<div class="brand"><span class="brand-mark" aria-hidden="true">[↗</span>Synthetix</div><p class="sidebar-description">Your frontend workshop</p>')
     if cloud_mode():
         with st.expander('Connect your AI', expanded=not bool(st.session_state.get('visitor_nebius_key'))):
             st.caption('Enter your own Nebius Token Factory key. AI calls use your credits. It stays in this server session and is not written to project files.')
@@ -132,8 +133,9 @@ with st.sidebar:
                 st.session_state['open_saved_run'] = True
         else:
             st.caption('Your completed runs will appear here.')
-    st.caption('NVIDIA Nemotron through Nebius Token Factory')
-    st.caption('AI actions use Nebius credits. Local inspection and hosting do not.')
+    with st.expander('AI provider & scope'):
+        st.caption('NVIDIA Nemotron through Nebius Token Factory')
+        st.caption('AI actions use Nebius credits. Local inspection and hosting do not. Self-contained HTML, CSS and JavaScript only.')
     if running_host():
         with st.expander('Local server is running'):
             st.caption('Stopping the server closes all local site links. Saved files remain.')
@@ -150,8 +152,9 @@ def announce_workflow(message):
 
 
 def perform_job(job):
-    announce_workflow('Working. Browser checks and model calls can take a few minutes.')
-    with st.status('Working — browser checks and model calls can take a few minutes.', expanded=True) as status:
+    operation = {'diagnose':'Opening Chromium and inspecting your code…', 'test_saved':'Running the checks recorded for this version…', 'host_code':'Inspecting your imported source before preview…', 'repair_plan':'Preparing behaviour tests for your approval…', 'repair':'Repairing with your approved checks · maximum three attempts…', 'interview_turn':'Planning the next design decision…'}.get(job.get('workflow'), 'Preparing your project…')
+    announce_workflow(operation)
+    with st.status(operation, expanded=True) as status:
         try:
             outcome = execute_job(job, status)
         except Exception:
@@ -178,7 +181,7 @@ def open_website_review(job):
     st.session_state['website_review_request'] = job
     st.session_state['website_review_last_request'] = job
     st.session_state.pop('website_review_outcome', None)
-    st.session_state['wb_layout'] = 'Preview focus'
+    st.session_state['wb_layout'] = 'Studio workspace'
     st.switch_page(pages['review'])
 
 
@@ -232,8 +235,12 @@ def render_workflow(workflow):
         if diagnosis and diagnosis.get('code_hash') == current_hash:
             errors = diagnosis['report']['combined_errors']
             if any(errors.values()):
-                st.warning('The browser observed these errors:')
-                st.json(errors)
+                if errors.get('execution_errors'):
+                    st.error('Browser checks could not run. Your imported source is preserved; review the evidence and retry inspection.')
+                else:
+                    st.error('Runtime errors observed. Your imported source is preserved; review the evidence before choosing a repair.')
+                with st.expander('Runtime failure evidence'):
+                    st.json(errors)
             else:
                 st.info('No load-time errors were observed. Intended behaviour still needs to be checked.')
             st.markdown('### What is this code supposed to do?')
@@ -332,12 +339,7 @@ def feature_page(workflow, title, description):
 
 def home_page():
     st.set_page_config(page_title='Synthetix · Browser-tested interfaces')
-    if cloud_mode():
-        # Native Streamlit navigation retains the visitor's temporary workspace.
-        # The local landing page's plain HTML links perform a full reload.
-        render_dashboard(pages)
-    else:
-        render_home(pages)
+    render_welcome(pages)
 
 
 def build_page():
@@ -376,7 +378,7 @@ def website_review_page():
     st.set_page_config(page_title='Review the website · Synthetix')
     st.title('Review the website')
     if 'wb_layout' not in st.session_state:
-        st.session_state['wb_layout'] = 'Preview focus'
+        st.session_state['wb_layout'] = 'Studio workspace'
     request = st.session_state.pop('website_review_request', None)
     if request is not None:
         st.query_params['interview'] = request['interview_id']
@@ -427,18 +429,18 @@ pages = {
     'dashboard': st.Page(dashboard_page, title='Dashboard', url_path='dashboard'),
     'build': st.Page(build_page, title='Build a website', url_path='build'),
     'review': st.Page(website_review_page, title='Review the website', url_path='review'),
-    'repair': st.Page(repair_page, title='Repair code', url_path='repair'),
-    'host': st.Page(host_page, title='Run HTML' if cloud_mode() else 'Run locally', url_path='host'),
+    'repair': st.Page(repair_page, title='Test and repair', url_path='repair'),
+    'host': st.Page(host_page, title='Run existing code', url_path='host'),
     'workspace': st.Page(workspace_page, title='Workspace', url_path='workspace'),
     'demo': st.Page(demo_page, title='Repair demo', url_path='demo'),
 }
 navigation = st.navigation(list(pages.values()), position='hidden')
 with navigation_slot:
-    for key in ['dashboard','build','review','repair','host','workspace']:
+    for key in ['home','build','repair','host','workspace']:
         st.page_link(pages[key], width='stretch')
-    st.caption('Explore')
-    for key in ['home','demo']:
-        st.page_link(pages[key], width='stretch')
+    with st.expander('More tools'):
+        for key in ['review','dashboard','demo']:
+            st.page_link(pages[key], width='stretch')
 if st.session_state.pop('open_saved_run', False):
     st.switch_page(pages['workspace'])
 navigation.run()

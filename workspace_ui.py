@@ -53,7 +53,9 @@ def diagnostics(report, manifest=None):
         for error in execution:st.code(str(error),language='text')
     if runtime:
         st.error(f'{len(runtime)} runtime issue(s) observed')
-        for error in runtime:st.code(str(error),language='text')
+        for index,error in enumerate(runtime,1):
+            with st.expander(f'Runtime failure {index} · evidence'):
+                st.code(str(error),language='text')
     elif not execution:
         st.success('Runtime: no JavaScript or console errors observed.')
     tests=[(key,report[key]) for key in ('counter_check','intent_check') if isinstance(report.get(key),dict)]
@@ -68,7 +70,8 @@ def diagnostics(report, manifest=None):
         for error in failures:
             if isinstance(error,dict):
                 st.error('Failed · '+markdown_text(error.get('step','Behaviour check')))
-                st.code(str(error.get('details',error)),language='text')
+                with st.expander('Failure evidence'):
+                    st.code(str(error.get('details',error)),language='text')
             else:st.error('Failed · '+markdown_text(error))
         pending=test.get('checks_not_run')
         if pending is None and failures and key=='intent_check' and manifest:
@@ -89,6 +92,14 @@ def render_workspace(folder, perform_job, preview_document, pages):
         st.warning('This run has no saved HTML. Start a new build or import a page.')
         return
     with st.container(key='workbench'):
+        stages = ['Plan', 'Generate', 'Test', 'Repair', 'Retest', 'Review']
+        completed = set()
+        if item['manifest'].get('approved_brief'): completed.add('Plan')
+        if item['mode'] == 'Build': completed.add('Generate')
+        if any((item['folder'] / f'report_{int(file.stem.split("_")[-1])}.json').exists() for file in files): completed.add('Test')
+        if summary.get('repairs_used', 0): completed.add('Repair')
+        if summary.get('repairs_used', 0) and len(files) > 1: completed.add('Retest')
+        st.html('<div class="stage-track" aria-label="Workflow evidence">'+''.join('<span class="'+('stage-active' if stage=='Review' else 'stage-complete' if stage in completed else '')+'">'+stage+(' · current' if stage=='Review' else ' · recorded' if stage in completed else ' · not recorded')+'</span>' for stage in stages)+'</div>')
         head, state = st.columns([3, 1])
         with head:
             st.header(markdown_text(item['title']))
@@ -99,9 +110,9 @@ def render_workspace(folder, perform_job, preview_document, pages):
             version_col, view_col, export_col = st.columns([2, 2, 1.3])
             with version_col:
                 selected = st.selectbox('Version', files, index=len(files)-1,
-                                        format_func=lambda p: 'Version ' + p.stem.split('_')[-1], key='wb_version_' + item['folder'].name)
+                                        format_func=lambda p: 'Version ' + p.stem.split('_')[-1] + (' · latest' if p == files[-1] else ' · historical'), key='wb_version_' + item['folder'].name)
             with view_col:
-                layout = st.selectbox('Panel layout', ['Split workspace', 'Preview focus', 'Code focus'], key='wb_layout')
+                layout = st.selectbox('Panel layout', ['Studio workspace', 'Tabbed workspace', 'Split workspace', 'Preview focus', 'Code focus'], key='wb_layout')
             document = selected.read_text(encoding='utf-8')
             number = int(selected.stem.split('_')[-1])
             report = read_json(item['folder'] / f'report_{number}.json')
@@ -109,6 +120,7 @@ def render_workspace(folder, perform_job, preview_document, pages):
             with version_state.container():
                 pill(f'Version {number} · {version_label}', tone)
             with export_col:
+                st.caption('Single HTML file · selected version')
                 st.download_button('Download HTML', selected.read_bytes(), file_name=f'synthetix-v{number}.html', mime='text/html', width='stretch', key='export_' + item['folder'].name)
         with st.container(key='workbench-actions', horizontal=True):
             if st.button('Run checks', type='primary', help='Recheck this saved version with the originally selected behaviour tests. No model call.'):
@@ -132,18 +144,21 @@ def render_workspace(folder, perform_job, preview_document, pages):
         if item['status'] == 'hosted_as_submitted':
             st.caption('Hosted without AI edits. Hosting is not a correctness claim.')
         if layout == 'Split workspace':
-            left, right = st.columns([1, 1.25], gap='medium')
+            left, right = st.columns([1, 2], gap='medium')
         else:
             left = right = None
 
         def code_panel():
             with st.container(border=True, key='source-panel'):
                 st.subheader('Source code')
-                st.caption('Editing creates a new inspection run; saved versions are not overwritten.')
-                with st.form('edit_source_' + item['folder'].name + '_' + str(number)):
-                    edited = st.text_area('HTML source', value=document, height=390, max_chars=100000,
-                                          key='source_' + item['folder'].name + '_' + str(number))
-                    inspect = st.form_submit_button('Inspect edited code')
+                st.caption('Editable draft · kept in this session after leaving the field. Inspect edited code saves a new run; saved versions remain unchanged.')
+                with st.expander('Read-only source · syntax highlighted'):
+                    st.code(document, language='html', line_numbers=True)
+                edited = st.text_area('HTML source', value=document, height=390, max_chars=100000, persist_state='session',
+                                      key='source_' + item['folder'].name + '_' + str(number))
+                if edited != document:
+                    st.info('Session draft differs from this saved version. Inspect to save and test it. Download HTML still exports the selected saved version.')
+                inspect = st.button('Inspect edited code', key='inspect_source_'+item['folder'].name+'_'+str(number))
                 if inspect:
                     result = perform_job({'workflow':'diagnose', 'html':edited, 'css':'', 'javascript':''})
                     if result.get('ok'):
@@ -153,12 +168,40 @@ def render_workspace(folder, perform_job, preview_document, pages):
             with st.container(border=True, key='preview-panel'):
                 st.subheader('Browser preview')
                 st.caption(f'Version {number} · Interactive sandbox · No external network access')
+                if st.button('Refresh preview', key='refresh_'+item['folder'].name):
+                    st.session_state['preview_refresh']=st.session_state.get('preview_refresh',0)+1
                 if not report or report_problem(report) or report.get('combined_errors',report).get('execution_errors'):
                     st.info('Preview not started: this version needs a completed browser inspection. Review the source and run checks first.')
                 else:
-                    preview_document(document,'Synthetix version '+str(number)+' preview')
+                    device = st.radio('Preview viewport', ['Fit', 'Desktop · 1280px', 'Tablet · 768px', 'Mobile · 390px'], horizontal=True, key='device_'+item['folder'].name)
+                    widths = {'Fit': '100%', 'Desktop · 1280px': '1280px', 'Tablet · 768px': '768px', 'Mobile · 390px': '390px'}
+                    st.caption('Fixed widths scroll inside the preview when wider than this panel. Fit follows the panel width.')
+                    from web_documents import preview_frame_html
+                    markup = preview_frame_html(document, 'Synthetix version '+str(number)+' preview '+str(st.session_state.get('preview_refresh',0)))
+                    st.markdown('<div style="max-width:100%;overflow-x:auto"><div style="width:'+widths[device]+'">'+markup+'</div></div>', unsafe_allow_html=True)
 
-        if left is not None:
+        primary_tabs = None
+        if layout == 'Studio workspace':
+            task, canvas = st.columns([1, 2.7], gap='medium')
+            with task, st.container(key='task-rail'):
+                st.subheader('Review this version')
+                st.caption(f'Version {number} · {selected.name}')
+                pill(version_label, tone)
+                st.write('Try the preview, review the evidence, then keep or revise your code.')
+                st.caption(f"Recorded AI repairs: {summary.get('repairs_used', 0)}. Automatic repair runs are limited to three attempts.")
+                with st.expander('Available checks', expanded=True):
+                    if item['manifest'].get('intent_checks'):
+                        for check in item['manifest']['intent_checks']: st.write(markdown_text(describe_check(check)))
+                    else: st.caption('No custom behaviour tests recorded. Runtime checks alone do not test intent.')
+            with canvas:
+                primary_tabs = st.tabs(['Preview', 'Code', 'Checks', 'Versions'])
+                with primary_tabs[0]: preview_panel()
+                with primary_tabs[1]: code_panel()
+        elif layout == 'Tabbed workspace':
+            primary_tabs = st.tabs(['Preview', 'Code', 'Checks', 'Versions'])
+            with primary_tabs[0]: preview_panel()
+            with primary_tabs[1]: code_panel()
+        elif left is not None:
             with left: code_panel()
             with right: preview_panel()
         elif layout == 'Preview focus':
@@ -168,14 +211,31 @@ def render_workspace(folder, perform_job, preview_document, pages):
             code_panel()
             with st.expander('Browser preview'): preview_panel()
 
-        tabs = st.tabs(['Diagnostics', 'Compare changes', 'Repair activity', 'Screenshot & reports'])
+        tabs = st.tabs(['Checks', 'Versions', 'Repair activity', 'Screenshot & reports']) if primary_tabs is None else [primary_tabs[2], primary_tabs[3], st.expander('Repair activity'), st.expander('Screenshot & reports')]
         with tabs[0]:
             diagnostics(report, item['manifest'])
         with tabs[1]:
+            st.caption('Choose a saved version above to inspect it. Restore creates a new, untested draft.')
+            for version_file in files:
+                version_number = int(version_file.stem.split('_')[-1])
+                thumbnail = item['folder'] / f'preview_{version_number}.png'
+                if thumbnail.is_file():
+                    with st.expander(f'Version {version_number} · captured preview'):
+                        st.image(str(thumbnail), width='stretch')
             baseline = st.selectbox('Compare against', files, format_func=lambda p: 'Version ' + p.stem.split('_')[-1], key='baseline_' + item['folder'].name)
             diff = ''.join(difflib.unified_diff(baseline.read_text(encoding='utf-8').splitlines(keepends=True),
                                                document.splitlines(keepends=True), fromfile=baseline.name, tofile=selected.name))
+            st.caption('Comparing '+baseline.name+' → '+selected.name)
             st.code(diff or 'No source differences between the selected versions.', language='diff')
+            with st.expander('Rendered comparison · saved screenshots'):
+                before, after = st.columns(2)
+                for column, version in [(before,baseline),(after,selected)]:
+                    index = int(version.stem.split('_')[-1])
+                    picture = item['folder']/f'preview_{index}.png'
+                    with column:
+                        st.caption(version.name)
+                        if picture.is_file():st.image(str(picture),width='stretch')
+                        else:st.info('No recorded screenshot for this version.')
         with tabs[2]:
             st.write('Saved evidence for each attempt')
             for file in files:
