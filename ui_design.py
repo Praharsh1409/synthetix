@@ -16,11 +16,11 @@ def presentation_styles(style_version):
     for name, family, style, weight in [('space.ttf','Space Grotesk','normal','400 700'),('serif.ttf','Instrument Serif','italic','400'),('mono.ttf','IBM Plex Mono','normal','400')]:
         data = base64.b64encode((ROOT/'assets'/'studio'/name).read_bytes()).decode('ascii')
         fonts.append(f"@font-face {{font-family:'{family}';src:url(data:font/ttf;base64,{data}) format('truetype');font-style:{style};font-weight:{weight};font-display:swap;}}")
-    return '<style>' + ''.join(fonts) + (ROOT / 'site.css').read_text(encoding='utf-8') + (ROOT / 'graphite.css').read_text(encoding='utf-8') + '</style>'
+    return '<style>' + ''.join(fonts) + (ROOT / 'site.css').read_text(encoding='utf-8') + (ROOT / 'graphite.css').read_text(encoding='utf-8') + (ROOT / 'canvas_story.css').read_text(encoding='utf-8') + '</style>'
 
 
 def apply_design():
-    st.html(presentation_styles(((ROOT / 'site.css').stat().st_mtime_ns, (ROOT / 'graphite.css').stat().st_mtime_ns)))
+    st.html(presentation_styles(((ROOT / 'site.css').stat().st_mtime_ns, (ROOT / 'graphite.css').stat().st_mtime_ns, (ROOT / 'canvas_story.css').stat().st_mtime_ns)))
 
 
 def render_home(pages):
@@ -46,4 +46,4 @@ def render_home(pages):
 
 
 def install_scroll_motion():
-    st.html((ROOT / 'scroll_motion.html').read_text(encoding='utf-8'), unsafe_allow_javascript=True)
+    st.html((ROOT / 'scroll_motion.html').read_text(encoding='utf-8').replace('</script>', (ROOT / 'continuous_motion.js').read_text(encoding='utf-8') + '\n</script>'), unsafe_allow_javascript=True)

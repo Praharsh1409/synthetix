@@ -88,9 +88,13 @@
   }
   const mutations=new MutationObserver(schedule);
   mutations.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-collapsed']});
-  window.addEventListener('scroll',update,{...options,passive:true});
+  let scrollFrame=0;
+  window.addEventListener('scroll',()=>{
+    if(!scrollFrame) scrollFrame=requestAnimationFrame(()=>{scrollFrame=0;update();});
+  },{...options,passive:true});
   window.addEventListener('resize',schedule,options);
   motion.addEventListener('change',()=>{
+    update();
     if(motion.matches) {
       observer?.disconnect();
       main.querySelectorAll('.sx-pending').forEach(e=>e.classList.remove('sx-pending'));
@@ -136,7 +140,7 @@
       : 'Enter a whole number from 1 to 10.';
   },options);
   window.synthetixMotion={destroy(){
-    abort.abort();observer?.disconnect();mutations.disconnect();cancelAnimationFrame(frame);progress.remove();
+    abort.abort();observer?.disconnect();mutations.disconnect();cancelAnimationFrame(frame);cancelAnimationFrame(scrollFrame);progress.remove();
     main.querySelectorAll('.sx-pending').forEach(e=>e.classList.remove('sx-pending'));
   }};
   prepare();
