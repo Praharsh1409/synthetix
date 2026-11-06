@@ -1,3 +1,4 @@
+from ai_backend import request_completion
 import json
 import os
 import uuid
@@ -7,37 +8,21 @@ from datetime import datetime
 from pathlib import Path
 from runtime_paths import artifacts_dir
 
-from dotenv import load_dotenv
-from openai import OpenAI
 
 from browser_check import check_html
 from counter_check import check_counter
 from intent_checks import check_intent, validate_checks
-from generate_ui import generate_html, MODEL, completion_content
+from generate_ui import generate_html, completion_content
 from design_refinement import generation_guidance
 
 
 PROJECT_FOLDER = Path(__file__).parent
 MAX_REPAIRS = 3
 
-load_dotenv(PROJECT_FOLDER / ".env")
 
 
 def repair_html(user_prompt, broken_html, errors):
-    api_key = os.getenv("NEBIUS_API_KEY")
-
-    if not api_key:
-        raise RuntimeError("NEBIUS_API_KEY is missing from .env.")
-
-    client = OpenAI(
-        base_url="https://api.tokenfactory.nebius.com/v1/",
-        api_key=api_key,
-        timeout=120.0,
-        max_retries=2,
-    )
-
-    response = client.chat.completions.create(
-        model=MODEL,
+    response = request_completion(
         messages=[
             {
                 "role": "system",
@@ -204,7 +189,7 @@ def run_pipeline(user_prompt, use_counter_checks=False, initial_html=None, demo_
                            error='The repair limit was reached. Review the remaining failures.')
                 return summary
             checkpoint('repairing',repair_attempts=repair_count+1)
-            print(f'Asking Nemotron for repair {repair_count+1}...',flush=True)
+            print(f'Asking AI for repair {repair_count+1}...',flush=True)
             phase='repair'
             candidate=repair_html(user_prompt,current_html,errors)
             current_html=candidate

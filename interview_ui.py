@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 import streamlit as st
+import ai_backend
 import design_interview as interview
 import guided_interview as guided
 from design_styles import STYLES, compatibility, preview
@@ -49,8 +50,8 @@ def render_start(perform_job):
         kind = st.selectbox('Project starting point', ['Custom website', 'Portfolio', 'SaaS landing page', 'Dashboard', 'E-commerce frontend', 'Blog', 'Educational website', 'Developer tool'])
         initial = st.text_area('Describe your website idea', key='planning_idea', persist_state='session', max_chars=3800, height=140,
             placeholder='For example: a photography portfolio for local clients, with a filterable gallery and a warm editorial feel.')
-        st.caption('Self-contained HTML/CSS/JavaScript. AI requests use Nebius credits. Answers are saved in this temporary session.' if cloud_mode() else 'Self-contained HTML/CSS/JavaScript. AI requests use Nebius credits. Your answers are saved locally.')
-        begin = st.form_submit_button('Begin design interview', type='primary')
+        st.caption('Self-contained HTML/CSS/JavaScript. Answers are saved in this temporary session.' if cloud_mode() else 'Self-contained HTML/CSS/JavaScript. Your answers are saved locally.')
+        begin = st.form_submit_button('Begin design interview', type='primary', disabled=not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE)
     if begin:
         try:
             if not initial.strip():
@@ -76,7 +77,7 @@ def render_question(state, perform_job):
     labels = [text(option['label']) for option in options] + ['Custom answer']
     if not options:
         st.info('AI suggestions are unavailable for this decision. Retry them or continue with your own answer.')
-        if st.button('Get three AI suggestions', key='question_suggestions_' + field):
+        if st.button('Get three AI suggestions', key='question_suggestions_' + field, disabled=not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE):
             request_suggestions(state, perform_job)
     key = state['id'] + '_' + field + '_' + interview.digest(options)[:10]
     selected = st.radio('Choose your answer', labels, index=None, key='guided_answer_' + key)
@@ -123,7 +124,7 @@ def render_styles(state, perform_job):
         st.warning(text(state['last_error']))
     if not options:
         st.info('Ask the AI for three design directions, or choose your own from the full style catalog.')
-        if st.button('Get three AI design recommendations'):
+        if st.button('Get three AI design recommendations', disabled=not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE):
             request_suggestions(state, perform_job)
     labels = [text(option['label']) for option in options] + ['Custom design']
     selected = st.radio('Choose a design direction', labels, index=None,
@@ -172,14 +173,15 @@ def launch_build(state, counter, start_build):
 
 def render_final(state, perform_job, start_build=None):
     st.subheader('Review your website brief')
-    st.write('This is what the builder will use. Approving starts real website generation and opens Review the website.')
+    st.write('Review and edit your saved design brief. Generation is currently unavailable.')
+    if not ai_backend.available(): st.info(ai_backend.UNAVAILABLE_MESSAGE)
     missing = [value for value in interview.blockers(state) if not value.startswith('Review style-dependent decisions:')]
     if missing:
         st.info('Before building: ' + text('; '.join(missing)))
         if state['pending']:
             if state.get('last_error'):
                 st.error(text(state['last_error']))
-            if st.button('Retry the unfinished AI reply'):
+            if st.button('Retry the unfinished AI reply', disabled=not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE):
                 request_reply(state, perform_job)
             if st.button('Review the saved answers without another AI reply'):
                 updated = deepcopy(state)
@@ -194,7 +196,7 @@ def render_final(state, perform_job, start_build=None):
         validation = st.selectbox('Validation', ['Runtime errors only', 'Counter behaviour + runtime'], key='interview_build_checks')
         st.caption('Counter checks are only suitable for Increase, Decrease and Reset interfaces. Runtime checks alone do not establish every requested behaviour.')
         reviewed = st.checkbox('I approve this exact design brief', key='approve_brief_' + interview.digest(draft_value))
-        approve = st.form_submit_button('Approve brief and generate ↗', type='primary')
+        approve = st.form_submit_button('Approve brief and generate ↗', type='primary', disabled=not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE)
     if approve:
         if not reviewed:
             st.error('Review the brief and select the approval checkbox before building.')

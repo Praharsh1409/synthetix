@@ -154,7 +154,8 @@ class DesignRefinementTests(unittest.TestCase):
                 ui_worker.handle({'workflow':'interview_refine','interview_id':state['id'],'revision':state['revision']-1})
             refine.assert_not_called()
 
-    def test_automatic_refinement_runs_once_and_original_brief_remains_available(self):
+    @patch('ai_backend.available', return_value=True)
+    def test_automatic_refinement_runs_once_and_original_brief_remains_available(self, available):
         state=d.save(self.state,expected_revision=self.state['revision'])
         script=f'''
 import streamlit as st

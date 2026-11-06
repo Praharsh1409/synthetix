@@ -170,7 +170,8 @@ render_interview(lambda job:None)
         self.assertFalse(app.exception)
         self.assertEqual(d.load(saved['id'])['requirements']['audience']['value'],'First-year engineering students')
 
-    def test_ui_approval_dispatches_review_request_without_separate_build_click(self):
+    @patch('ai_backend.available', return_value=True)
+    def test_ui_approval_dispatches_review_request_without_separate_build_click(self, available):
         state=g.select_styles(ready(self.state),['Minimalism'])
         saved=d.save(state,expected_revision=self.state['revision'])
         code=f"""

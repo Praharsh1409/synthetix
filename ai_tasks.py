@@ -1,25 +1,17 @@
+from ai_backend import request_completion
 """Purpose clarification, reviewed behaviour checks, and design brief refinement."""
 import json
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-from openai import OpenAI
 
-from generate_ui import MODEL, completion_content
+from generate_ui import completion_content
 from intent_checks import validate_checks
 
-load_dotenv(Path(__file__).parent / '.env')
 
 
 def ask_json(system, user):
-    key = os.getenv('NEBIUS_API_KEY', '').strip()
-    if not key:
-        raise ValueError('NEBIUS_API_KEY is missing from .env.')
-    client = OpenAI(base_url='https://api.tokenfactory.nebius.com/v1/', api_key=key,
-                    timeout=120.0, max_retries=2)
-    response = client.chat.completions.create(
-        model=MODEL,
+    response = request_completion(
         messages=[{'role': 'system', 'content': system + ' Return only a valid JSON object, without Markdown.'},
                   {'role': 'user', 'content': user}],
         max_tokens=8192,

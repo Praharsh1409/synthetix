@@ -1,3 +1,4 @@
+from credential_safety import without_credentials
 """Publish static sites and return a URL only after an HTTP check succeeds."""
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -72,9 +73,8 @@ def ensure_host():
         if record:
             return record
         SITES.mkdir(parents=True, exist_ok=True)
-        environment = os.environ.copy()
+        environment = without_credentials(os.environ)
         environment['PYTHONUTF8'] = '1'
-        environment.pop('NEBIUS_API_KEY', None)
         with (STATE.parent / 'server.log').open('ab') as log:
             process = subprocess.Popen(
                 [sys.executable, '-u', str(ROOT / 'local_host.py'), '--sites', str(SITES), '--state', str(STATE)],

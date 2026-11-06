@@ -14,6 +14,7 @@ from runtime_paths import cloud_mode, worker_environment, requires_model, job_sl
 
 import streamlit as st
 from text_safety import markdown_text
+import ai_backend
 from ui_design import apply_design, render_home, install_scroll_motion
 from editorial_home import render_welcome
 from hosting import running_host, stop_host
@@ -67,20 +68,19 @@ def preview_document(document, title):
 
 
 def execute_job(job, status, on_progress=None):
-    key = st.session_state.get('visitor_nebius_key', '') if cloud_mode() else ''
-    if cloud_mode() and requires_model(job) and not key.strip():
-        return {'ok': False, 'error': 'Add your Nebius API key in the sidebar to use AI. Browser inspection and running pasted HTML do not need a key.'}
+    if requires_model(job) and not ai_backend.available():
+        return {'ok': False, 'error': ai_backend.UNAVAILABLE_MESSAGE, 'error_type': 'AIUnavailableError'}
     with job_slot():
-        return execute_worker(job, status, on_progress, key)
+        return execute_worker(job, status, on_progress)
 
 
-def execute_worker(job, status, on_progress=None, api_key=''):
+def execute_worker(job, status, on_progress=None):
     folder = artifacts_dir(ARTIFACTS) / 'ui_jobs' / uuid.uuid4().hex
     folder.mkdir(parents=True, exist_ok=False)
     request_file = folder / 'request.json'
     result_file = folder / 'result.json'
     request_file.write_text(json.dumps(job), encoding='utf-8')
-    environment = worker_environment(os.environ, api_key)
+    environment = worker_environment(os.environ)
     process = subprocess.Popen(
         [sys.executable, '-u', str(ROOT / 'ui_worker.py'),
          '--request', str(request_file), '--result', str(result_file)],
@@ -99,7 +99,7 @@ def execute_worker(job, status, on_progress=None, api_key=''):
             lines.append(line)
             if on_progress:on_progress(line)
             if line.startswith(('Generating', 'Checking version', 'Running counter',
-                                'Asking Nemotron', 'CONTROLLED DEMO', 'PASS:', 'Improving', 'Planning', 'Hosting', 'Checking your')):
+                                'Asking AI', 'CONTROLLED DEMO', 'PASS:', 'Improving', 'Planning', 'Hosting', 'Checking your')):
                 status.write(markdown_text(line))
         process.wait()
     finally:
@@ -115,13 +115,14 @@ def execute_worker(job, status, on_progress=None, api_key=''):
     return read_json(result_file)
 
 
+for _old_credential in list(st.session_state):
+    if _old_credential.startswith('visitor_') and _old_credential.endswith('_key'):
+        st.session_state.pop(_old_credential, None)
+
+
 with st.sidebar:
     st.html('<div class="brand"><span class="brand-mark" aria-hidden="true">[↗</span>Synthetix</div><p class="sidebar-description">Your frontend workshop</p>')
     if cloud_mode():
-        with st.expander('Connect your AI', expanded=not bool(st.session_state.get('visitor_nebius_key'))):
-            st.caption('Enter your own Nebius Token Factory key. AI calls use your credits. It stays in this server session and is not written to project files.')
-            st.text_input('Nebius API key', type='password', key='visitor_nebius_key', max_chars=1000, persist_state='session')
-            st.caption('Only submit a key on this trusted Synthetix app. Browser inspection works without it.')
         st.caption('Temporary visitor workspace. Download your HTML before closing or refreshing this tab; this free host is not permanent project storage.')
     navigation_slot = st.container()
     with st.expander('Saved projects'):
@@ -133,9 +134,9 @@ with st.sidebar:
                 st.session_state['open_saved_run'] = True
         else:
             st.caption('Your completed runs will appear here.')
-    with st.expander('AI provider & scope'):
-        st.caption('NVIDIA Nemotron through Nebius Token Factory')
-        st.caption('AI actions use Nebius credits. Local inspection and hosting do not. Self-contained HTML, CSS and JavaScript only.')
+    with st.expander('AI availability & scope'):
+        st.info(ai_backend.UNAVAILABLE_MESSAGE)
+        st.caption('Self-contained HTML, CSS and JavaScript. Imported source is kept unchanged until you choose to edit it.')
     if running_host():
         with st.expander('Local server is running'):
             st.caption('Stopping the server closes all local site links. Saved files remain.')
@@ -152,7 +153,7 @@ def announce_workflow(message):
 
 
 def perform_job(job):
-    operation = {'diagnose':'Opening Chromium and inspecting your code…', 'test_saved':'Running the checks recorded for this version…', 'host_code':'Inspecting your imported source before preview…', 'repair_plan':'Preparing behaviour tests for your approval…', 'repair':'Repairing with your approved checks · maximum three attempts…', 'interview_turn':'Planning the next design decision…'}.get(job.get('workflow'), 'Preparing your project…')
+    operation = {'diagnose':'Opening Chromium and inspecting your code…', 'test_saved':'Running the checks recorded for this version…', 'test_imported':'Running your approved checks without changing the source…', 'host_code':'Inspecting your imported source before preview…', 'repair_plan':'Preparing behaviour tests for your approval…', 'repair':'Repairing with your approved checks · maximum three attempts…', 'interview_turn':'Planning the next design decision…'}.get(job.get('workflow'), 'Preparing your project…')
     announce_workflow(operation)
     with st.status(operation, expanded=True) as status:
         try:
@@ -218,7 +219,7 @@ def render_workflow(workflow):
     elif workflow == 'Repair code':
         st.header('First, check the code you have')
         st.caption('Use a self-contained HTML/CSS/JavaScript page. Runtime diagnosis is local. '
-                   'Planning and repair send the submitted code and purpose to Nebius.')
+                   'AI planning and automatic repair are currently unavailable. Browser checks and manual editing remain available.')
         code = code_editor('repair')
         try:
             document = assemble_document(code['html'], code['css'], code['javascript'])
@@ -247,7 +248,7 @@ def render_workflow(workflow):
             purpose = st.text_area('Describe the intended behaviour', max_chars=3000, height=120, key='repair_purpose',
                                    placeholder='For example: Increase should add exactly one; Reset should show zero.')
             signature = hashlib.sha256((current_hash + purpose).encode()).hexdigest()
-            if st.button('Prepare purpose-based repair plan', disabled=not purpose.strip(), help='Describe the intended behaviour first. Planning uses Nebius credits.'):
+            if st.button('Prepare purpose-based repair plan', disabled=not purpose.strip() or not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE):
                 outcome = perform_job({'workflow': 'plan_repair', 'diagnosis_folder': diagnosis['folder'], 'purpose': purpose})
                 if outcome.get('ok'):
                     st.session_state['repair_plan'] = outcome['plan']
@@ -282,11 +283,30 @@ def render_workflow(workflow):
                     st.caption('No behaviour assertions selected. Repair will be guided by your purpose and checked for runtime errors only.')
                 reviewed_key = 'reviewed_' + hashlib.sha256((signature + json.dumps(approved_checks, sort_keys=True)).encode()).hexdigest()
                 reviewed = st.checkbox('These checks match my intended behaviour', key=reviewed_key)
-                if st.button('Repair, verify and preview' if cloud_mode() else 'Repair, verify and host locally', type='primary', disabled=not (reviewed and valid_checks), help='Approve valid behaviour checks above before starting a repair.'):
+                if st.button('Repair, verify and preview' if cloud_mode() else 'Repair, verify and host locally', type='primary', disabled=not (reviewed and valid_checks) or not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE if not ai_backend.available() else 'Approve valid behaviour checks above before starting a repair.'):
                     perform_job({'workflow': 'repair', 'diagnosis_folder': diagnosis['folder'], 'purpose': purpose,
                                  'intent_checks': approved_checks, 'checks_reviewed': True})
             elif plan:
                 st.info('The purpose has changed. Prepare a new matching repair plan.')
+            with st.expander('Write and approve your own browser checks', expanded=not ai_backend.available()):
+                st.caption('No AI connection is needed. These checks run against the inspected source without changing it. Use [] for runtime-only inspection.')
+                manual_json = st.text_area('Browser checks (JSON)', value='[]', key='manual_checks_json', height=160,
+                    help='Supported actions: click, fill, expect_text, expect_value and expect_visible. Locators: role, label, css or text. Include an assertion for behaviour checks.')
+                try:
+                    manual_checks = validate_checks(json.loads(manual_json))
+                    manual_valid = True
+                except (ValueError, json.JSONDecodeError) as error:
+                    st.error(markdown_text(str(error)))
+                    manual_checks, manual_valid = [], False
+                for step in manual_checks:
+                    st.write('• ' + markdown_text(describe_check(step)))
+                if manual_valid and not manual_checks:
+                    st.caption('No behaviour assertions selected. Only runtime errors will be checked.')
+                approval_key = 'manual_reviewed_' + hashlib.sha256((current_hash + json.dumps(manual_checks, sort_keys=True)).encode()).hexdigest()
+                manual_reviewed = st.checkbox('I approve these browser checks', key=approval_key)
+                if st.button('Run approved checks', type='primary', disabled=not (manual_valid and manual_reviewed)):
+                    perform_job({'workflow':'test_imported','diagnosis_folder':diagnosis['folder'],
+                                 'intent_checks':manual_checks,'checks_reviewed':True})
         elif diagnosis:
             st.info('The code has changed. Click Find errors again before requesting repair.')
 
@@ -300,8 +320,8 @@ def render_workflow(workflow):
 
     else:
         st.info('This demo deliberately starts with an Increase button that adds two instead of one. '
-                'The same repair pipeline must detect the failed check and ask Nemotron to repair it.')
-        if st.button('Run controlled repair demo', type='primary'):
+                'The same repair pipeline must detect the failed check and request an AI repair. Automatic repair is currently unavailable.')
+        if st.button('Run controlled repair demo', type='primary', disabled=not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE):
             perform_job({'workflow': 'demo'})
 
 
@@ -406,7 +426,7 @@ def website_review_page():
             if request is None:
                 st.error(markdown_text(outcome.get('error', 'Website preparation did not finish.')))
             prior = st.session_state.get('website_review_last_request')
-            if prior and st.button('Retry website generation', type='primary'):
+            if prior and st.button('Retry website generation', type='primary', disabled=not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE):
                 try:
                     state = design_interview.load(prior['interview_id'])
                     if not state.get('approved_brief') or state['approved_brief']['hash'] != prior['approval_hash']:
@@ -432,14 +452,13 @@ pages = {
     'repair': st.Page(repair_page, title='Test and repair', url_path='repair'),
     'host': st.Page(host_page, title='Run existing code', url_path='host'),
     'workspace': st.Page(workspace_page, title='Workspace', url_path='workspace'),
-    'demo': st.Page(demo_page, title='Repair demo', url_path='demo'),
 }
 navigation = st.navigation(list(pages.values()), position='hidden')
 with navigation_slot:
     for key in ['home','build','repair','host','workspace']:
         st.page_link(pages[key], width='stretch')
     with st.expander('More tools'):
-        for key in ['review','dashboard','demo']:
+        for key in ['review','dashboard']:
             st.page_link(pages[key], width='stretch')
 if st.session_state.pop('open_saved_run', False):
     st.switch_page(pages['workspace'])

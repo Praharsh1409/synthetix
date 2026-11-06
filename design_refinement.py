@@ -169,7 +169,7 @@ def skip(state):
 
 def refine(state, ask=None):
     from design_interview import blockers, render_brief, requirement_values
-    from nebius_tasks import ask_json
+    from ai_tasks import ask_json
     missing = [item for item in blockers(state) if not item.startswith('Review style-dependent decisions:')]
     if missing:
         raise ValueError('Finish the important requirements before refining the visual design.')

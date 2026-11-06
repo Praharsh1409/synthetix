@@ -7,7 +7,7 @@ import synthetix
 import project_store
 from artifact_io import write_text
 from web_documents import assemble_document
-from nebius_tasks import plan_repair
+from ai_tasks import plan_repair
 
 
 def runtime(*errors):
@@ -94,5 +94,5 @@ class ImportAndStorageTests(unittest.TestCase):
 
     def test_missing_model_checks_is_rejected_instead_of_crashing_ui(self):
         invalid={'understanding':'Counter','likely_issues':[],'assumptions':[]}
-        with patch('nebius_tasks.ask_json',return_value=invalid):
+        with patch('ai_tasks.ask_json',return_value=invalid):
             with self.assertRaises(ValueError):plan_repair('<p>Counter</p>','Increase by one',{})

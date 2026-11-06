@@ -1,3 +1,4 @@
+from unittest.mock import patch
 import ast
 import hashlib
 import json
@@ -10,10 +11,12 @@ ROOT=Path(web_documents.__file__).parent
 
 
 class TrustInterfaceTests(unittest.TestCase):
-    def test_editing_approved_checks_requires_fresh_approval(self):
+    @patch('ai_backend.available', return_value=True)
+    def test_editing_approved_checks_requires_fresh_approval(self, available):
         tree=ast.parse((ROOT/'app.py').read_text(encoding='utf-8'))
         source=ast.unparse(next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='render_workflow'))
         script='''
+import ai_backend
 import streamlit as st
 from text_safety import markdown_text
 import hashlib,json
@@ -48,6 +51,33 @@ if 'fixture_ready' not in st.session_state:
         app=AppTest.from_string("from workspace_ui import diagnostics\ndiagnostics({'combined_errors':{}})").run()
         self.assertFalse(app.exception)
         self.assertEqual(len(app.success),0)
+
+    def test_manual_checks_require_fresh_approval_after_edit(self):
+        tree=ast.parse((ROOT/'app.py').read_text(encoding='utf-8'))
+        source=ast.unparse(next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='render_workflow'))
+        script='''
+import streamlit as st
+import ai_backend,hashlib,json
+from text_safety import markdown_text
+from intent_checks import validate_checks,describe_check
+from web_documents import assemble_document
+CODE='<html><output id="value">0</output></html>'
+def code_editor(prefix):return {'html':CODE,'css':'','javascript':''}
+def perform_job(job):raise AssertionError('No job was approved in this fixture')
+if 'diagnosis' not in st.session_state:
+    st.session_state['diagnosis']={'folder':'fixture','code_hash':hashlib.sha256(assemble_document(CODE).encode()).hexdigest(),'report':{'combined_errors':{}}}
+'''+source+"\nrender_workflow('Repair code')\n"
+        app=AppTest.from_string(script).run()
+        self.assertFalse(app.exception)
+        run=next(b for b in app.button if b.label=='Run approved checks')
+        self.assertTrue(run.disabled)
+        next(c for c in app.checkbox if c.label=='I approve these browser checks').check().run()
+        self.assertFalse(next(b for b in app.button if b.label=='Run approved checks').disabled)
+        checks=[{'action':'expect_text','by':'css','selector':'#value','text':'0'}]
+        app.text_area(key='manual_checks_json').set_value(json.dumps(checks)).run()
+        self.assertFalse(app.exception)
+        self.assertFalse(next(c for c in app.checkbox if c.label=='I approve these browser checks').value)
+        self.assertTrue(next(b for b in app.button if b.label=='Run approved checks').disabled)
 
     def test_execution_error_does_not_display_runtime_pass(self):
         report={'javascript_errors':[],'console_errors':[],'execution_errors':['Browser could not run']}

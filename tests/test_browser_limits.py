@@ -22,9 +22,9 @@ class BrowserLimitTests(unittest.TestCase):
         self.assertTrue(all(len(message)<=2000 for message in messages))
 
     def test_credentials_are_not_given_to_chromium(self):
-        with patch.dict(os.environ,{'NEBIUS_API_KEY':'audit-only-key','AWS_SECRET_ACCESS_KEY':'audit-only-secret'}):
+        with patch.dict(os.environ,{'EXAMPLE_API_KEY':'audit-only-key','AWS_SECRET_ACCESS_KEY':'audit-only-secret'}):
             environment=browser_environment()
-            self.assertFalse('NEBIUS_API_KEY' in environment)
+            self.assertFalse('EXAMPLE_API_KEY' in environment)
             self.assertFalse('AWS_SECRET_ACCESS_KEY' in environment)
 
     def test_screenshot_allocation_is_viewport_bounded(self):

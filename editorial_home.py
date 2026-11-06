@@ -1,6 +1,7 @@
 """A local creative playground, separated from real projects and inference."""
 import html
 import streamlit as st
+import ai_backend
 from project_store import list_runs
 from text_safety import markdown_text
 from web_documents import preview_frame_html
@@ -24,6 +25,7 @@ def render_welcome(pages):
         if st.session_state.get('run_folder'):st.page_link(pages['workspace'],label='Open workspace ↗')
         st.page_link(pages['host'],label='Import HTML')
     st.html('<div class="studio-hero"><p class="studio-kicker">AN IDEA IS A GOOD PLACE TO START / 01</p><h1><span class="hero-mask"><span>Make something</span></span><span class="hero-mask"><em>worth opening.</em></span></h1><p>Turn a small idea into a website you can shape, test, and refine.</p></div>')
+    if not ai_backend.available(): st.info(ai_backend.UNAVAILABLE_MESSAGE)
     name=st.session_state.get('demo_example','Photographer portfolio')
     item=EXAMPLES[name]
     if 'studio_idea' not in st.session_state:st.session_state['studio_idea']=item['idea']

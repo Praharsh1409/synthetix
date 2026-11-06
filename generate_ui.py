@@ -1,20 +1,17 @@
+from ai_backend import request_completion
 import json
 import os
 from datetime import datetime
 from pathlib import Path
 from runtime_paths import artifacts_dir
 
-from dotenv import load_dotenv
-from openai import OpenAI
 
 from browser_check import check_html
 from design_refinement import generation_guidance
 
 
 PROJECT_FOLDER = Path(__file__).parent
-MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
 
-load_dotenv(PROJECT_FOLDER / ".env")
 
 
 def completion_content(response):
@@ -35,20 +32,7 @@ def completion_content(response):
 
 
 def generate_html(user_prompt):
-    api_key = os.getenv("NEBIUS_API_KEY")
-
-    if not api_key:
-        raise RuntimeError("NEBIUS_API_KEY is missing from .env.")
-
-    client = OpenAI(
-        base_url="https://api.tokenfactory.nebius.com/v1/",
-        api_key=api_key,
-        timeout=120.0,
-        max_retries=2,
-    )
-
-    response = client.chat.completions.create(
-        model=MODEL,
+    response = request_completion(
         messages=[
             {
                 "role": "system",
@@ -116,7 +100,7 @@ def main():
         print("Please keep this first prompt under 4,000 characters.")
         return
 
-    print("\n1. Asking Nemotron to generate HTML...")
+    print("\n1. Asking AI to generate HTML...")
 
     html_code = generate_html(user_prompt)
 

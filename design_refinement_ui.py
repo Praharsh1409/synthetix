@@ -1,5 +1,6 @@
 """Review real AI art direction before approving the generation brief."""
 import streamlit as st
+import ai_backend
 import design_interview as interview
 import design_refinement as refinement
 from text_safety import markdown_text
@@ -19,7 +20,7 @@ def request_refinement(state, perform_job):
 def render_design_refinement(state, perform_job):
     record = refinement.current(state)
     attempt_key = 'design_refinement_attempt_' + state['id'] + '_' + refinement.fingerprint(state)
-    auto = state.get('auto_design_refinement', False) and not state.get('summary_approval') and not state.get('approved_brief')
+    auto = ai_backend.available() and state.get('auto_design_refinement', False) and not state.get('summary_approval') and not state.get('approved_brief')
     if record is None and auto and not st.session_state.get(attempt_key):
         st.session_state[attempt_key] = True
         st.write('Refining the layout, visual identity and purposeful motion before you review the brief…')
@@ -46,10 +47,10 @@ def render_design_refinement(state, perform_job):
         elif record and record['status'] == 'skipped':
             st.caption('Using your original brief. The extra AI design pass is skipped.')
         else:
-            st.write('Ask Nemotron for a subject-specific layout, stronger hierarchy, visual details and suitable animations before coding.')
-            st.caption('This extra design pass uses Nebius credits, with at most one schema-correction retry. It does not add pages or features.')
+            st.write('Ask the AI for a subject-specific layout, stronger hierarchy, visual details and suitable animations before coding.')
+            st.caption('AI design refinement is currently unavailable. Your saved brief remains editable.')
         actions = st.columns(2)
-        if actions[0].button('Refine design again' if record and record['status'] == 'ready' else 'Refine the design with AI', key='refine_design_action'):
+        if actions[0].button('Refine design again' if record and record['status'] == 'ready' else 'Refine the design with AI', key='refine_design_action', disabled=not ai_backend.available(), help=ai_backend.UNAVAILABLE_MESSAGE):
             request_refinement(state, perform_job)
         if record and record['status'] == 'ready' and actions[1].button('Use original brief', key='skip_design_refinement'):
             interview.save(refinement.skip(state), expected_revision=state['revision'])

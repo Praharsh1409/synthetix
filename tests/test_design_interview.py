@@ -227,7 +227,8 @@ render_interview(lambda job: None)
         self.assertEqual(set(select.options),set(STYLES))
         self.assertFalse(any(b.label=='Approve brief and generate ↗' for b in app.button))
 
-    def test_ui_approval_submits_exact_edited_text_and_dispatches_build(self):
+    @patch('ai_backend.available', return_value=True)
+    def test_ui_approval_submits_exact_edited_text_and_dispatches_build(self, available):
         state=d.save(d.confirm_summary(complete(self.reply())),expected_revision=self.state['revision'])
         code=f'''
 import streamlit as st
@@ -255,7 +256,8 @@ render_interview(no_build)
         self.assertEqual(app.session_state['website_review_request'],queued)
         self.assertEqual(d.load(state['id'])['approved_brief']['text'],draft)
 
-    def test_ui_cannot_approve_without_the_review_checkbox(self):
+    @patch('ai_backend.available', return_value=True)
+    def test_ui_cannot_approve_without_the_review_checkbox(self, available):
         state=d.save(d.confirm_summary(complete(self.reply())),expected_revision=self.state['revision'])
         app=AppTest.from_string(f"import streamlit as st\nfrom interview_ui import render_interview\nst.session_state['design_interview_id']={state['id']!r}\nrender_interview(lambda job:None)",default_timeout=15).run()
         next(b for b in app.button if b.label=='Approve brief and generate ↗').click().run()

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import threading
+from credential_safety import without_credentials
 
 ROOT = Path(__file__).resolve().parent
 _session = ContextVar('synthetix_session', default=None)
@@ -48,20 +49,16 @@ def interview_dir(default):
     return artifacts_dir() / 'design_interviews' if cloud_mode() else Path(default)
 
 
-def worker_environment(original, api_key=''):
-    result = dict(original)
+def worker_environment(original):
+    result = without_credentials(original)
     result.update(PYTHONUTF8='1', PYTHONIOENCODING='utf-8')
     if cloud_mode():
         result['SYNTHETIX_CLOUD_SESSION'] = session_id()
-        # Never fall back to the owner's credentials in a public visitor session.
-        result.pop('NEBIUS_API_KEY', None)
-        if api_key.strip():
-            result['NEBIUS_API_KEY'] = api_key.strip()
     return result
 
 
 def requires_model(job):
-    return job.get('workflow') not in ('diagnose', 'test_saved', 'host_code', 'host_existing')
+    return job.get('workflow') not in ('diagnose', 'test_saved', 'test_imported', 'host_code', 'host_existing')
 
 
 @contextmanager

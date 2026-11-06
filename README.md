@@ -1,142 +1,94 @@
 # Synthetix
 
-**Plan the website. Build it. Test the behaviour. Review the repair.**
+**Your independent frontend workbench.**
 
-Synthetix is a local AI-assisted website builder and code-repair workspace. It uses **NVIDIA Nemotron through Nebius Token Factory** to collaborate on a design brief, generate self-contained HTML/CSS/JavaScript, inspect it in Chromium and attempt repairs when selected checks fail.
+Synthetix helps you import, preview, test and review self-contained HTML, CSS and JavaScript websites. Run real Chromium checks, inspect their evidence, edit your code and export the result.
 
-[Use online](https://praharsh1409.github.io/synthetix/app.html) · [Project website](https://praharsh1409.github.io/synthetix/) · [How it works](#how-it-works) · [Windows setup](#windows-setup) · [Testing](#testing)
+[Open the workspace](https://praharsh1409.github.io/synthetix/app.html) · [Project website](https://praharsh1409.github.io/synthetix/) · [Local setup](#local-setup)
 
-![Synthetix design interview and shared project requirements](docs/media/design-interview.png)
+## Current availability
 
-## What you can do
+No AI provider is enabled in this development release. AI conversations, design refinement, website generation and automatic repair are temporarily unavailable while a replacement backend is developed and verified. The experimental local model has not met the repair-quality criteria and is not connected to the public app.
 
-- **Build:** describe an idea, answer one question at a time using three AI suggestions or a custom answer, then choose a design direction from the 15 supported styles. Saved answers move the interview forward automatically.
-- **AI design refinement:** before a new project's final approval, Nemotron proposes a concrete visual concept, layout hierarchy, typography, surface treatment, subject-specific detail and up to three purposeful animations. Review and edit that proposal inside the final brief, refine it again, or use the original brief. Existing saved projects can opt in with **Refine the design with AI**. Changes to requirements invalidate stale proposals. Explicit no-animation preferences and reduced-motion support are preserved.
-- **Review the website:** approving the exact final brief starts generation and opens the review page. The supplied Synthetix logo animates while real work is running. Percentage progress counts five completed stages, not elapsed time; completion requires saved HTML and a passing browser report. Inspect the actual preview and export the HTML here.
-- **Repair:** import HTML, inspect runtime errors, describe intended behaviour, review browser assertions, then attempt a repair and rerun the same checks.
-- **Run locally:** serve a self-contained webpage on your computer without AI changes to its source.
-- **Review:** inspect versions, screenshots, diagnostics and code differences; restore an earlier version as an untested draft and download HTML.
+The app does not ask for an API key, load provider credentials from `.env`, or fall back to an owner's key. No inference SDK or provider endpoint is configured. A disabled action explains why it is unavailable; example projects and scripted walkthroughs are labelled and never presented as generated results.
 
-The design interview supports Minimalism, Maximalism, Glassmorphism, Neumorphism, Claymorphism, Brutalism, Neo-Brutalism, Skeuomorphism, Flat Design, Material Design, Bento UI, Y2K Design, Retro Design, Cyberpunk and Editorial Design. Compatible combinations are supported; unusual combinations show trade-offs. Recommendations remain editable proposals.
+## What works now
 
-## How it works
+- **Import and preview:** paste HTML with optional CSS/JavaScript and run the original page in an isolated preview. Previewing does not change the source.
+- **Inspect:** collect JavaScript exceptions and console errors through sandboxed, offline Chromium.
+- **Approve browser checks:** write declarative steps, review their descriptions, explicitly approve them and run them without AI edits. Supported actions are `click`, `fill`, `expect_text`, `expect_value` and `expect_visible`; executable model-written test code is not accepted.
+- **Review:** inspect code, screenshots, reports, versions and differences. Restore a version into an untested draft. Recheck saved versions against their recorded assertions.
+- **Edit and export:** inspect a manually edited draft as a new run and download the selected HTML.
+- **Run locally:** the local entry point can start a loopback-only server. Online sessions use the isolated preview instead of an unusable visitor-localhost link.
+- **Explore:** interactive prebuilt examples and the scroll walkthrough remain available without a model call.
 
-```text
-Describe / import
-      ↓
-Clarify requirements → review decisions → approve brief or behaviour checks
-      ↓
-Generate / inspect → run in isolated Chromium → collect evidence
-                          ↑                       ↓
-                          └──── attempt repair ───┘
-      ↓
-Review source, versions, screenshots and reports → export / run locally
+Existing planning, editable-brief approval, behavior-test approval and bounded repair logic remain in the source for the future backend. Automatic repairs retain a maximum of three attempts and rerun the same checks. Unavailable AI actions do not fabricate results or mark a project as generated.
+
+## Check an interaction
+
+After importing a page on **Test and repair**, choose **Find errors**. Open **Write and approve your own browser checks**, edit the JSON, review the listed steps, select **I approve these browser checks**, then choose **Run approved checks**. For example, a counter with a button labelled Add and an output with ID `value` can use:
+
+```json
+[
+  {"action":"click","by":"role","role":"button","name":"Add"},
+  {"action":"expect_text","by":"css","selector":"#value","text":"1"}
+]
 ```
 
-Repairs are bounded to three attempts. A runtime-only pass means no runtime failure was observed within the test window. Behaviour assertions are needed to verify intended functionality; neither result certifies every interaction, appearance or device.
+This example is not a test for every website. Match selectors, actions and expected outcomes to your page. Changing the source requires another inspection; changing checks requires fresh approval. An empty list checks runtime errors only. Passing selected checks does not establish all behavior, visual quality, accessibility or every device.
 
 ## Use online
 
-Open [Synthetix on the project website](https://praharsh1409.github.io/synthetix/app.html), or [open the app directly](https://synthetix-workspace.streamlit.app/).
+[GitHub Pages](https://praharsh1409.github.io/synthetix/) provides the public website and embeds the [Streamlit workspace](https://synthetix-workspace.streamlit.app/). Each visitor receives a separate temporary workspace. Download your HTML before closing or refreshing: hosting may restart, sleep or discard temporary work. No accounts or permanent project storage are provided.
 
-The online entry point is `cloud_app.py`. It gives each visitor an unguessable, server-managed temporary workspace. AI workflows use the visitor's Nebius key, entered in the password field and passed only to that visitor's worker process. The owner's environment key is never a fallback. Keys are not saved in requests, project files or the repository. Browser inspection and Run HTML do not require a model key.
+The deployment uses repository `Praharsh1409/synthetix`, branch `main`, entry point `cloud_app.py` and Python 3.12. No model-service secrets are required. `packages.txt` supplies Debian Chromium and its sandbox helper; failure to run the sandbox is an execution error, not a reason to disable it.
 
-Online HTML runs in the existing isolated browser preview; the app does not give remote visitors unusable `127.0.0.1` links. Download HTML to keep it or run it locally. Sessions are temporary: refreshing, disconnecting, hibernation or redeployment can lose access. This release does not provide accounts, permanent storage or a production service guarantee.
+## Local setup
 
-### Free Community Cloud deployment
-
-Deploy `Praharsh1409/synthetix`, branch `main`, entry point `cloud_app.py`, Python 3.12. No owner API secret is required. `packages.txt` installs Debian Chromium and its sandbox helper. Chromium sandboxing stays enabled; a host that cannot support it must return an execution failure rather than disable the protection. An installed system browser can differ from Playwright's bundled version and must be verified on the target host.
-
-Only one hosted worker runs at a time. A ten-minute worker deadline and a 25 MB visitor-workspace limit bound individual jobs. These controls supplement the offline browser, filtered environment and CSP; they are not full OS isolation or a denial-of-service guarantee. Do not upload secrets or private source to a public demo host. Free hosting has resource limits and can sleep. AI provider usage is billed to the key owner.
-
-## Windows setup
-
-Validated with **Python 3.12 on Windows**. Other operating systems have not been verified for this release.
+Python 3.12 is the verified local runtime. On Windows:
 
 ```powershell
 git clone https://github.com/Praharsh1409/synthetix.git
 cd synthetix
 py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m playwright install chromium
-Copy-Item .env.example .env
-```
-
-Edit `.env` in your editor and set your own `NEBIUS_API_KEY`. Never commit the real key.
-
-```powershell
 .\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
-Open **http://127.0.0.1:8501/**. The default listener is restricted to your computer. The model must be available to your Nebius account; the configured ID is `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`.
+Open **http://127.0.0.1:8501/** after the server starts. No `.env` or API credentials are needed. The default listener is restricted to this computer. Saved local work is stored in `artifacts/`, which is excluded from the repository.
 
-AI conversations, generation, test planning and repair use your Nebius credits. Local browser inspection, hosting, tests and the static website's illustrative counter make no model calls.
-
-The extra design pass normally makes one AI request, with at most one schema-correction retry. A failure keeps your original requirements and does not automatically retry on rerenders. Refinement proposes presentation details; it never approves itself or guarantees visual quality. The exact final text you approve, including any edits, remains the generation source of truth. Generation and repairs are instructed to implement and preserve the chosen layout and motion rather than flattening the design to eliminate a runtime error.
-
-## Testing
+## Tests
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 .\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe demo_self_heal.py --check-only
 ```
 
-The regression suite uses temporary artifacts, Chromium, isolated Streamlit tests and controlled API responses. It does not require a live API key. Validation before this release on October 28, 2026: **95 tests passed**. This is a dated validation result, not a live benchmark or a guarantee of generated-site quality.
-
-Guided-flow verification on October 29, 2026: **116 tests passed**, including saved single-question answers, custom-answer recovery, extraction before question selection, approval-triggered generation, stage-based progress, compact completion, and saved-site recovery. Live model and browser acceptance checks are reported separately from these controlled regression tests.
+The suite includes real browser checks, source preservation, saved reports, isolation, approval gates, unavailable-backend handling and controlled response-validation fixtures. Mocked AI tests do not establish live model performance. Test results belong to the particular source revision and environment where they ran.
 
 ## Architecture
 
 | Component | Responsibility |
 |---|---|
-| `app.py`, `interview_ui.py`, `workspace_ui.py` | Streamlit navigation, planning and code workspace |
-| `design_interview.py`, `design_styles.py` | Persistent requirements, recommendations and approval gates |
-| `guided_interview.py`, `generation_ui.py` | One-decision interview transitions, three AI suggestions plus custom answers, and real generation-stage progress |
-| `design_refinement.py`, `design_refinement_ui.py` | Reviewable, requirement-bound art direction and animation proposals before brief approval |
-| `ui_worker.py` | Model and browser operations outside the UI event loop |
-| `nebius_tasks.py`, `generate_ui.py`, `self_heal.py` | Nebius/Nemotron integration |
-| `synthetix.py` | Generation, check, bounded repair and retest pipeline |
-| `browser_safety.py`, `intent_checks.py`, `counter_check.py` | Browser isolation and declarative assertions |
-| `project_store.py`, `artifact_io.py`, `reporting.py` | Checkpoints, history and honest verdicts |
-| `hosting.py`, `local_host.py`, `web_documents.py` | Loopback-only hosting and isolated previews |
+| `app.py`, `cloud_app.py`, `workspace_ui.py` | Navigation, local/cloud entry points and review workspace |
+| `ai_backend.py` | Explicit unavailable-provider boundary; no credentials or network calls |
+| `ai_tasks.py`, `generate_ui.py`, `synthetix.py` | Planning/generation/repair contracts retained for a future backend |
+| `design_interview.py`, `guided_interview.py` | Persistent requirements, style selection and brief approval |
+| `ui_worker.py` | Isolated worker operations and manual approved browser checks |
+| `browser_safety.py`, `intent_checks.py` | Offline sandboxed Chromium and declarative assertions |
+| `project_store.py`, `artifact_io.py`, `reporting.py` | Versions, atomic checkpoints, differences and honest outcomes |
+| `credential_safety.py`, `runtime_paths.py` | Credential-filtered process environments and visitor scope |
+| `hosting.py`, `local_host.py`, `web_documents.py` | Loopback hosting and isolated previews |
 
-Planning conversations and saved runs are stored in `artifacts/` on your computer. They are excluded from this repository. If AI suggestions fail, already saved answers remain available and a custom answer or explicit retry can continue the interview. Changing requirements requires fresh brief approval. Website generation is not automatically retried on page rerenders.
+## Scope and safety
 
-## Scope and security
+The product focuses on self-contained frontend HTML/CSS/JavaScript. It does not implement website payments, authentication, databases or email services. Uploaded pages are untrusted: previews use sandboxed frames and content policies; browser checks block network access. Credentials are filtered from browser, worker and local-host processes.
 
-- Generates one self-contained HTML file with inline CSS/JavaScript. Multiple views can live inside that file.
-- Does not implement real payments, authentication, databases or email backends.
-- Treats uploaded/generated pages as untrusted. Chromium checks restrict network access; previews and hosted pages use opaque sandboxed frames and content security policies.
-- Keeps API keys server-side and filters browser-process environment variables. External assets, cross-origin APIs, navigation and some storage features are intentionally restricted.
-- Uses explicit timeouts and bounded diagnostics, inputs and allocations. These controls are **not** a complete OS/container or CPU/RSS/GPU quota system.
-- The local entry point remains single-user. The online entry point provides temporary visitor isolation and bring-your-own-key access; it does not provide authenticated accounts, durable storage or full operating-system isolation.
-- AI extraction, style rankings and test proposals can be wrong. Review the decisions and assertions before approving them.
+The hosted service has bounded jobs, timeouts, diagnostics and temporary storage, with one worker admitted at a time. These controls are not full process-container or resource isolation. Do not upload secrets or sensitive source. A failed check or unavailable service must not be labelled a success.
 
-## GitHub Pages
+## Website and license
 
-The `docs/` directory contains the public project website and `app.html`, which embeds the real Streamlit app using the supported `?embed=true` URL. GitHub Pages serves the shell; Streamlit Community Cloud runs Python and Chromium. The separate counter illustration remains labelled as scripted. The direct-app link is available if a browser blocks embedded apps.
+GitHub Pages serves `main` → `/docs`; Streamlit runs Python and Chromium. Website assets use relative paths. The graphite/electric-blue workbench, prebuilt examples and motion respect reduced-motion preferences and preserve each preview's own colors.
 
-Publish the website from **Settings → Pages → Deploy from a branch → main → /docs**. The `.nojekyll` file keeps it a plain static site. All website assets use relative paths, including when served under `/synthetix/`.
-
-The source repository includes no personal `.env`, virtual environment, conversations, saved projects, backups or internal audit logs. Third-party model access and browser downloads are separate from the source code.
-
-## Hackathon demonstration
-
-[Watch the public Synthetix demo on YouTube](https://youtu.be/iiLC2TvzU-M) (under three minutes).
-
-The video shows actual local application captures, a newly generated site and a deliberately seeded logic-bug repair. Both selected counter-check suites passed after one AI repair each. AI waits are shortened and synthetic narration is disclosed. The separate imported-code test-planning attempt failed schema validation; the video does not claim otherwise. Passing assertions do not certify visual quality or all interactions.
-
-The malformed-plan validator now rejects non-string action and locator fields as validation errors instead of crashing with TypeError. Validation on October 29, 2026: **142 local regression tests passed**, including the new malformed-field cases. This is a controlled regression result, not a live-model benchmark. Online AI workflows currently require the visitor's own Nebius key.
-
-## License
-
-Synthetix source is available under the [MIT License](LICENSE). Third-party packages and model services retain their own terms.
-
-
-## Graphite creative workbench
-
-The interface includes three prebuilt interactive examples, three composition directions, and an explicitly simulated walkthrough. Choosing an example makes no model request. Start this project opens the real planning flow, where the editable brief must be approved before generation. Preview, Code, Checks, and Versions retain real browser evidence and saved-source downloads. Session code drafts are temporary; inspect edited code to save a new run.
-
-The graphite theme surrounds isolated previews without recolouring their documents. Space Grotesk, Instrument Serif italic, IBM Plex Mono, and example imagery are stored locally. See [asset sources and font licenses](assets/studio/SOURCES.txt); third-party assets retain their respective licenses.
+Synthetix source is available under the [MIT License](LICENSE). See [asset sources and font licenses](assets/studio/SOURCES.txt) for third-party materials; their licenses remain in force.

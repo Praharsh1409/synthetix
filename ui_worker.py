@@ -17,7 +17,7 @@ from intent_checks import check_intent
 from project_store import source_file, validation_manifest
 from hosting import publish_html
 from intent_checks import validate_checks
-from nebius_tasks import plan_repair, refine_brief
+from ai_tasks import plan_repair, refine_brief
 from synthetix import run_pipeline, check_version
 from browser_safety import ERROR_KINDS
 from artifact_io import write_text, write_json, public_error
@@ -108,11 +108,24 @@ def handle(request):
         print('Improving the website brief...', flush=True)
         return {'ok': True, 'kind': 'brief', 'brief': refine_brief(request.get('prompt', ''))}
 
-    if workflow == 'test_saved':
-        original = safe_folder(request.get('output_folder', ''))
-        source = source_file(original, request.get('version', ''))
-        document = source.read_bytes().decode('utf-8')
-        manifest=validation_manifest(original)
+    if workflow in ('test_saved', 'test_imported'):
+        if workflow == 'test_imported':
+            if request.get('checks_reviewed') is not True:
+                raise ValueError('Review and approve your browser checks before running them.')
+            checks = validate_checks(request.get('intent_checks', []))
+            original = safe_folder(request.get('diagnosis_folder', ''))
+            source = source_file(original, 'version_0.html')
+            document = source.read_bytes().decode('utf-8')
+            diagnosis = json.loads((original/'diagnosis.json').read_text(encoding='utf-8'))
+            if diagnosis.get('code_hash') != hashlib.sha256(document.encode()).hexdigest():
+                raise ValueError('The inspected source changed. Find errors again before approving checks.')
+            manifest = {'workflow':'manual_check','intent_checks':checks,'counter_checks_selected':False,
+                        'checks_reviewed':True,'original_sha256':diagnosis['code_hash']}
+        else:
+            original = safe_folder(request.get('output_folder', ''))
+            source = source_file(original, request.get('version', ''))
+            document = source.read_bytes().decode('utf-8')
+            manifest=validation_manifest(original)
         checks = validate_checks(manifest.get('intent_checks', []))
         counter_selected = manifest.get('counter_checks_selected') is True
         folder = create_folder('check')
@@ -125,7 +138,7 @@ def handle(request):
         if passed:
             write_text(folder/'final.html',document)
         summary = {'status':('execution_failed' if errors['execution_errors'] else 'no_runtime_errors_observed' if passed else 'checks_failed'),
-                   'output_folder':str(folder), 'repairs_used':0, 'initial_source':'saved_version_check',
+                   'output_folder':str(folder), 'repairs_used':0, 'initial_source':'submitted_unmodified' if workflow=='test_imported' else 'saved_version_check',
                    'requested_features_verified':False,
                    'counter_behavior_verified':passed and counter_selected,
                    'intent_checks_verified':passed and bool(checks), 'intent_check_steps':len(checks),
@@ -253,10 +266,7 @@ def main():
         if status:
             message = f'The model service returned HTTP {status}. Try again after checking service access and availability.'
         else:
-            message = str(error)[:1000]
-            secret = os.getenv('NEBIUS_API_KEY', '')
-            if secret:
-                message = message.replace(secret, '[redacted]')
+            message = public_error(error)[:1000]
         result = {'ok': False, 'error': message, 'error_type': type(error).__name__}
     Path(args.result).write_text(json.dumps(result, indent=2), encoding='utf-8')
     return 0 if result['ok'] else 1

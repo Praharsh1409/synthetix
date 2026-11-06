@@ -1,9 +1,8 @@
+from ai_backend import request_completion
 import json
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-from openai import OpenAI
 from playwright.sync_api import expect
 from browser_safety import empty_report,isolated_page,load_document,ERROR_KINDS
 from generate_ui import completion_content
@@ -12,9 +11,7 @@ from browser_check import check_html
 
 
 PROJECT_FOLDER = Path(__file__).parent
-load_dotenv(PROJECT_FOLDER / ".env")
 
-MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
 
 BROKEN_HTML = """
 <!DOCTYPE html>
@@ -37,20 +34,7 @@ BROKEN_HTML = """
 
 
 def request_repair(html_code, errors):
-    api_key = os.getenv("NEBIUS_API_KEY")
-
-    if not api_key:
-        raise RuntimeError("NEBIUS_API_KEY is missing from .env.")
-
-    client = OpenAI(
-        base_url="https://api.tokenfactory.nebius.com/v1/",
-        api_key=api_key,
-        timeout=90.0,
-        max_retries=0,
-    )
-
-    response = client.chat.completions.create(
-        model=MODEL,
+    response = request_completion(
         messages=[
             {
                 "role": "system",
@@ -127,7 +111,7 @@ def main():
     if not any(errors.values()):
         raise RuntimeError("Expected a browser error, but none was detected.")
 
-    print("\n2. Asking Nemotron to repair the page...")
+    print("\n2. Asking AI to repair the page...")
 
     repaired_html = request_repair(BROKEN_HTML, errors)
 

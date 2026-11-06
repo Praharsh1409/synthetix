@@ -2,9 +2,9 @@
  <section class="hero-layout" aria-labelledby="home-title">
   <div class="hero-copy">
    <h1 id="home-title">Build. Test.<br> Repair. Repeat.</h1>
-   <p>An AI-powered workspace that builds websites, detects code problems, and helps repair them through real browser testing.</p>
+   <p>Import, inspect and review frontend code through real browser checks. AI generation and automatic repair are currently unavailable.</p>
    <div class="hero-links"><a class="sx-button" href="/build">Start building</a><a class="text-link" href="#feedback-loop">Explore how it works</a></div>
-   <p class="technology-note">NVIDIA Nemotron · Nebius Token Factory · Chromium</p>
+   <p class="technology-note">Independent frontend workbench · Chromium</p>
   </div>
   <div class="hero-specimen" data-ui data-live-counter>
    <div class="specimen-topbar"><strong>Counter / behaviour check</strong><span>Interactive example</span></div>
@@ -38,7 +38,7 @@
    <li data-reveal><span class="step-marker" aria-hidden="true">2</span><div><strong>Generate or inspect</strong><p>Review the brief or explain what the existing page should do.</p></div></li>
    <li data-reveal><span class="step-marker" aria-hidden="true">3</span><div><strong>Run in Chromium</strong><p>Observe JavaScript errors, console errors, and selected interactions.</p></div></li>
    <li data-reveal><span class="step-marker" aria-hidden="true">4</span><div><strong>Collect the failure</strong><p>Keep the code, failed expectation, screenshot, and report together.</p></div></li>
-   <li data-reveal><span class="step-marker" aria-hidden="true">5</span><div><strong>Attempt a repair</strong><p>Nemotron uses your intent and the observed failures to revise the code.</p></div></li>
+   <li data-reveal><span class="step-marker" aria-hidden="true">5</span><div><strong>Attempt a repair</strong><p>A future AI backend will use your intent and the observed failures. Automatic repair is currently unavailable.</p></div></li>
    <li data-reveal><span class="step-marker" aria-hidden="true">6</span><div><strong>Retest and compare</strong><p>Run the selected checks again, inspect changes, and download the HTML.</p></div></li>
   </ol>
  </section>
@@ -50,8 +50,8 @@
   <details><summary>What can I build?</summary><p>Self-contained HTML, CSS, and JavaScript interfaces. Working payment, login, database, and email backends are outside the current scope.</p></details>
   <details><summary>Does passing mean everything works?</summary><p>No. It means the selected checks passed. Appearance, accessibility, mobile layout, and other interactions still require review. The repair loop stops after three attempts if failures remain.</p></details>
   <details><summary>How does the intended behaviour matter?</summary><div class="intent-controls"><label for="expected-increment">Expected increment per click</label><input id="expected-increment" type="number" min="1" max="10" step="1" value="1" inputmode="numeric" aria-describedby="intent-help intent-verdict"><p id="intent-help">Enter a whole number from 1 to 10. The example code always adds two.</p><p>Observed: 2. Required: <strong data-intent-expected>1</strong>.</p><p id="intent-verdict" data-intent-verdict role="status" aria-live="polite" aria-atomic="true">Does not match the requirement.</p></div></details>
-  <details><summary>Which actions use Nebius credits?</summary><p>Brief improvement, test planning, generation, and AI repairs call Nemotron through Nebius Token Factory. Local inspection and hosting make no model calls.</p></details>
+  <details><summary>Is an AI backend connected?</summary><p>No. AI actions are currently unavailable. Import, browser checks, review and downloads make no model calls.</p></details>
   <details><summary>Is a local website public?</summary><p>No. Local links work on the computer running Synthetix while its local server is active. They are not public deployments.</p></details>
  </div></section>
- <footer class="home-footer"><span>Synthetix · Browser-tested interfaces</span><nav aria-label="Workspace shortcuts"><a href="/dashboard">Dashboard</a><a href="/build">Build</a><a href="/repair">Repair</a></nav><span>NVIDIA Nemotron through Nebius</span></footer>
+ <footer class="home-footer"><span>Synthetix · Browser-tested interfaces</span><nav aria-label="Workspace shortcuts"><a href="/dashboard">Dashboard</a><a href="/build">Build</a><a href="/repair">Repair</a></nav><span>An independent project</span></footer>
 </div>
